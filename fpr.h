@@ -29,7 +29,7 @@
  * @author   Thomas Pornin <thomas.pornin@nccgroup.com>
  */
 
-#if FALCON_FPEMU  // yyyFPEMU+1 yyyFPNATIVE+0
+#if FALCON_FPEMU// yyyFPEMU+1 yyyFPNATIVE+0
 
 /* ====================================================================== */
 /*
@@ -216,7 +216,7 @@ FPR(int s, int e, uint64_t m)
 	return x;
 }
 
-#define fpr_scaled   Zf(fpr_scaled)
+#define fpr_scaled Zf(fpr_scaled)
 fpr fpr_scaled(int64_t i, int sc);
 
 static inline fpr
@@ -229,7 +229,7 @@ static const fpr fpr_q = 4667981563525332992;
 static const fpr fpr_inverse_of_q = 4545632735260551042;
 static const fpr fpr_inv_2sqrsigma0 = 4594603506513722306;
 static const fpr fpr_inv_sigma[] = {
-	0,  /* unused */
+	0, /* unused */
 	4574611497772390042,
 	4574501679055810265,
 	4574396282908341804,
@@ -239,10 +239,9 @@ static const fpr fpr_inv_sigma[] = {
 	4573842244705920822,
 	4573721358406441454,
 	4573606369665796042,
-	4573496814039276259
-};
+	4573496814039276259};
 static const fpr fpr_sigma_min[] = {
-	0,  /* unused */
+	0, /* unused */
 	4607707126469777035,
 	4607777455861499430,
 	4607846828256951418,
@@ -252,8 +251,7 @@ static const fpr fpr_sigma_min[] = {
 	4608244935301382692,
 	4608340089478362016,
 	4608433670533905013,
-	4608525754002622308
-};
+	4608525754002622308};
 static const fpr fpr_log2 = 4604418534313441775;
 static const fpr fpr_inv_log2 = 4609176140021203710;
 static const fpr fpr_bnorm_max = 4670353323383631276;
@@ -336,7 +334,7 @@ fpr_floor(fpr x)
 	e = (int)(x >> 52) & 0x7FF;
 	t = x >> 63;
 	xi = (int64_t)(((x << 10) | ((uint64_t)1 << 62))
-		& (((uint64_t)1 << 63) - 1));
+				   & (((uint64_t)1 << 63) - 1));
 	xi = (xi ^ -(int64_t)t) + (int64_t)t;
 	cc = 1085 - e;
 
@@ -391,10 +389,10 @@ fpr_trunc(fpr x)
 	 */
 	t = x >> 63;
 	xu = (xu ^ -t) + t;
-	return *(int64_t *)&xu;
+	return *(int64_t*)&xu;
 }
 
-#define fpr_add   Zf(fpr_add)
+#define fpr_add Zf(fpr_add)
 fpr fpr_add(fpr x, fpr y);
 
 static inline fpr
@@ -438,7 +436,7 @@ fpr_double(fpr x)
 	return x;
 }
 
-#define fpr_mul   Zf(fpr_mul)
+#define fpr_mul Zf(fpr_mul)
 fpr fpr_mul(fpr x, fpr y);
 
 static inline fpr
@@ -447,7 +445,7 @@ fpr_sqr(fpr x)
 	return fpr_mul(x, x);
 }
 
-#define fpr_div   Zf(fpr_div)
+#define fpr_div Zf(fpr_div)
 fpr fpr_div(fpr x, fpr y);
 
 static inline fpr
@@ -456,7 +454,7 @@ fpr_inv(fpr x)
 	return fpr_div(4607182418800017408u, x);
 }
 
-#define fpr_sqrt   Zf(fpr_sqrt)
+#define fpr_sqrt Zf(fpr_sqrt)
 fpr fpr_sqrt(fpr x);
 
 static inline int
@@ -475,8 +473,8 @@ fpr_lt(fpr x, fpr y)
 	 */
 	int cc0, cc1;
 
-	cc0 = *(int64_t *)&x < *(int64_t *)&y;
-	cc1 = *(int64_t *)&x > *(int64_t *)&y;
+	cc0 = *(int64_t*)&x < *(int64_t*)&y;
+	cc1 = *(int64_t*)&x > *(int64_t*)&y;
 	return cc0 ^ ((cc0 ^ cc1) & (int)((x & y) >> 63));
 }
 
@@ -484,18 +482,18 @@ fpr_lt(fpr x, fpr y)
  * Compute exp(x) for x such that |x| <= ln 2. We want a precision of 50
  * bits or so.
  */
-#define fpr_expm_p63   Zf(fpr_expm_p63)
+#define fpr_expm_p63 Zf(fpr_expm_p63)
 uint64_t fpr_expm_p63(fpr x, fpr ccs);
 
-#define fpr_gm_tab   Zf(fpr_gm_tab)
+#define fpr_gm_tab Zf(fpr_gm_tab)
 extern const fpr fpr_gm_tab[];
 
-#define fpr_p2_tab   Zf(fpr_p2_tab)
+#define fpr_p2_tab Zf(fpr_p2_tab)
 extern const fpr fpr_p2_tab[];
 
 /* ====================================================================== */
 
-#elif FALCON_FPNATIVE  // yyyFPEMU+0 yyyFPNATIVE+1
+#elif FALCON_FPNATIVE// yyyFPEMU+0 yyyFPNATIVE+1
 
 /* ====================================================================== */
 
@@ -507,7 +505,9 @@ extern const fpr fpr_p2_tab[];
  * type instead of using the inline functions below. This should have no
  * extra runtime cost, since all the functions below are 'inline'.
  */
-typedef struct { double v; } fpr;
+typedef struct {
+	double v;
+} fpr;
 
 static inline fpr
 FPR(double v)
@@ -524,50 +524,48 @@ fpr_of(int64_t i)
 	return FPR((double)i);
 }
 
-static const fpr fpr_q = { 12289.0 };
-static const fpr fpr_inverse_of_q = { 1.0 / 12289.0 };
-static const fpr fpr_inv_2sqrsigma0 = { .150865048875372721532312163019 };
+static const fpr fpr_q = {12289.0};
+static const fpr fpr_inverse_of_q = {1.0 / 12289.0};
+static const fpr fpr_inv_2sqrsigma0 = {.150865048875372721532312163019};
 static const fpr fpr_inv_sigma[] = {
-	{ 0.0 }, /* unused */
-	{ 0.0069054793295940891952143765991630516 },
-	{ 0.0068102267767177975961393730687908629 },
-	{ 0.0067188101910722710707826117910434131 },
-	{ 0.0065883354370073665545865037227681924 },
-	{ 0.0064651781207602900738053897763485516 },
-	{ 0.0063486788828078995327741182928037856 },
-	{ 0.0062382586529084374473367528433697537 },
-	{ 0.0061334065020930261548984001431770281 },
-	{ 0.0060336696681577241031668062510953022 },
-	{ 0.0059386453095331159950250124336477482 }
-};
+	{0.0}, /* unused */
+	{0.0069054793295940891952143765991630516},
+	{0.0068102267767177975961393730687908629},
+	{0.0067188101910722710707826117910434131},
+	{0.0065883354370073665545865037227681924},
+	{0.0064651781207602900738053897763485516},
+	{0.0063486788828078995327741182928037856},
+	{0.0062382586529084374473367528433697537},
+	{0.0061334065020930261548984001431770281},
+	{0.0060336696681577241031668062510953022},
+	{0.0059386453095331159950250124336477482}};
 static const fpr fpr_sigma_min[] = {
-	{ 0.0 }, /* unused */
-	{ 1.1165085072329102588881898380334015 },
-	{ 1.1321247692325272405718031785357108 },
-	{ 1.1475285353733668684571123112513188 },
-	{ 1.1702540788534828939713084716509250 },
-	{ 1.1925466358390344011122170489094133 },
-	{ 1.2144300507766139921088487776957699 },
-	{ 1.2359260567719808790104525941706723 },
-	{ 1.2570545284063214162779743112075080 },
-	{ 1.2778336969128335860256340575729042 },
-	{ 1.2982803343442918539708792538826807 }
-};
-static const fpr fpr_log2 = { 0.69314718055994530941723212146 };
-static const fpr fpr_inv_log2 = { 1.4426950408889634073599246810 };
-static const fpr fpr_bnorm_max = { 16822.4121 };
-static const fpr fpr_zero = { 0.0 };
-static const fpr fpr_one = { 1.0 };
-static const fpr fpr_two = { 2.0 };
-static const fpr fpr_onehalf = { 0.5 };
-static const fpr fpr_invsqrt2 = { 0.707106781186547524400844362105 };
-static const fpr fpr_invsqrt8 = { 0.353553390593273762200422181052 };
-static const fpr fpr_ptwo31 = { 2147483648.0 };
-static const fpr fpr_ptwo31m1 = { 2147483647.0 };
-static const fpr fpr_mtwo31m1 = { -2147483647.0 };
-static const fpr fpr_ptwo63m1 = { 9223372036854775807.0 };
-static const fpr fpr_mtwo63m1 = { -9223372036854775807.0 };
-static const fpr fpr_ptwo63 = { 9223372036854775808.0 };
+	{0.0}, /* unused */
+	{1.1165085072329102588881898380334015},
+	{1.1321247692325272405718031785357108},
+	{1.1475285353733668684571123112513188},
+	{1.1702540788534828939713084716509250},
+	{1.1925466358390344011122170489094133},
+	{1.2144300507766139921088487776957699},
+	{1.2359260567719808790104525941706723},
+	{1.2570545284063214162779743112075080},
+	{1.2778336969128335860256340575729042},
+	{1.2982803343442918539708792538826807}};
+static const fpr fpr_log2 = {0.69314718055994530941723212146};
+static const fpr fpr_inv_log2 = {1.4426950408889634073599246810};
+static const fpr fpr_bnorm_max = {16822.4121};
+static const fpr fpr_zero = {0.0};
+static const fpr fpr_one = {1.0};
+static const fpr fpr_two = {2.0};
+static const fpr fpr_onehalf = {0.5};
+static const fpr fpr_invsqrt2 = {0.707106781186547524400844362105};
+static const fpr fpr_invsqrt8 = {0.353553390593273762200422181052};
+static const fpr fpr_ptwo31 = {2147483648.0};
+static const fpr fpr_ptwo31m1 = {2147483647.0};
+static const fpr fpr_mtwo31m1 = {-2147483647.0};
+static const fpr fpr_ptwo63m1 = {9223372036854775807.0};
+static const fpr fpr_mtwo63m1 = {-9223372036854775807.0};
+static const fpr fpr_ptwo63 = {9223372036854775808.0};
 
 static inline int64_t
 fpr_rint(fpr x)
@@ -708,10 +706,10 @@ fpr_div(fpr x, fpr y)
 	return FPR(x.v / y.v);
 }
 
-#if FALCON_AVX2  // yyyAVX2+1
+#if FALCON_AVX2// yyyAVX2+1
 TARGET_AVX2
 static inline void
-fpr_sqrt_avx2(double *t)
+fpr_sqrt_avx2(double* t)
 {
 	__m128d x;
 
@@ -719,8 +717,9 @@ fpr_sqrt_avx2(double *t)
 	x = _mm_sqrt_pd(x);
 	_mm_storel_pd(t, x);
 }
-#endif  // yyyAVX2-
-
+#endif         // yyyAVX2-
+static inline double invSqrtEst(double val, double x);
+static inline double sqrtEst(double val, double x);
 static inline fpr
 fpr_sqrt(fpr x)
 {
@@ -758,18 +757,20 @@ fpr_sqrt(fpr x)
 	 * the dependency to libm will still be there.
 	 */
 
-#if FALCON_AVX2  // yyyAVX2+1
+#if FALCON_AVX2// yyyAVX2+1
 	fpr_sqrt_avx2(&x.v);
 	return x;
-#else  // yyyAVX2+0
+#else          // yyyAVX2+0
 #if defined __GNUC__ && defined __SSE2_MATH__
 	return FPR(_mm_cvtsd_f64(_mm_sqrt_pd(_mm_set1_pd(x.v))));
 #elif defined __GNUC__ && defined __i386__
-	__asm__ __volatile__ (
+	__asm__ __volatile__(
 		"fldl   %0\n\t"
 		"fsqrt\n\t"
 		"fstpl  %0\n\t"
-		: "+m" (x.v) : : );
+		: "+m"(x.v)
+		:
+		:);
 	return x;
 #elif defined _M_IX86
 	__asm {
@@ -789,9 +790,15 @@ fpr_sqrt(fpr x)
 	 * are managed in double-precision registers anyway, and the
 	 * compiler will not add extra rounding steps.
 	 */
-	__asm__ ( "fsqrt  %0, %1" : "=f" (y.v) : "f" (x.v) : );
+	__asm__("fsqrt  %0, %1"
+			: "=f"(y.v)
+			: "f"(x.v)
+			:);
 #else
-	__asm__ ( "fsqrt  %0, %1" : "=d" (y.v) : "d" (x.v) : );
+	__asm__("fsqrt  %0, %1"
+			: "=d"(y.v)
+			: "d"(x.v)
+			:);
 #endif
 	return y;
 #elif (defined __ARM_FP && ((__ARM_FP & 0x08) == 0x08)) \
@@ -805,17 +812,55 @@ fpr_sqrt(fpr x)
 	 *    64-bit   GCC-6.3.0   Clang-3.9   Binutils-2.28
 	 */
 #if defined __aarch64__ && __aarch64__
-	__asm__ ( "fsqrt   %d0, %d0" : "+w" (x.v) : : );
+	__asm__("fsqrt   %d0, %d0"
+			: "+w"(x.v)
+			:
+			:);
 #else
-	__asm__ ( "fsqrtd  %P0, %P0" : "+w" (x.v) : : );
+	__asm__("fsqrtd  %P0, %P0"
+			: "+w"(x.v)
+			:
+			:);
 #endif
 	return x;
 #else
-	return FPR(sqrt(x.v));
+
+	/// calculate the sqrt of a number by calculating 1/sqrt(x) * x
+	/// \param x the radical
+	/// \return sqrt of x
+
+	const double precision = 1e-50;
+	double val = x.v;
+	double last;
+	if (x.v == 1 || x.v == 0) return x;
+	//find a good initial guess
+	val = sqrtEst(val, x.v);
+	val = sqrtEst(val, x.v);
+	//start with unstable 1/sqrt now that we have a decent guess
+	val = invSqrtEst(1 / val, x.v);
+	do {
+		last = val;
+		val = invSqrtEst(val, x.v);
+	} while ((val - last) > precision);
+	// sqrt(x) = x/sqrt(x)
+	val = x.v * val;
+	return FPR(val);
+
+	//return FPR(sqrt(x.v));
 #endif
-#endif  // yyyAVX2-
+#endif// yyyAVX2-
+}
+static inline double invSqrtEst(double val, double x)
+{
+	val = 0.5 * val * (3 - x * val * val);
+	return val;
 }
 
+static inline double sqrtEst(double val, double x)
+{
+	val = (val + x / val) * 0.5;
+	return val;
+}
 static inline int
 fpr_lt(fpr x, fpr y)
 {
@@ -837,7 +882,7 @@ fpr_expm_p63(fpr x, fpr ccs)
 	 * 2^(-50) from the true mathematical value.
 	 */
 
-#if FALCON_AVX2  // yyyAVX2+1
+#if FALCON_AVX2// yyyAVX2+1
 
 	/*
 	 * AVX2 implementation uses more operations than Horner's method,
@@ -846,25 +891,23 @@ fpr_expm_p63(fpr x, fpr ccs)
 	 * a Skylake, but the CPU can issue two of them per cycle.
 	 */
 
-	static const union {
+	static const union
+	{
 		double d[12];
 		__m256d v[3];
 	} c = {
-		{
-			0.999999999999994892974086724280,
-			0.500000000000019206858326015208,
-			0.166666666666984014666397229121,
-			0.041666666666110491190622155955,
-			0.008333333327800835146903501993,
-			0.001388888894063186997887560103,
-			0.000198412739277311890541063977,
-			0.000024801566833585381209939524,
-			0.000002755586350219122514855659,
-			0.000000275607356160477811864927,
-			0.000000025299506379442070029551,
-			0.000000002073772366009083061987
-		}
-	};
+		{0.999999999999994892974086724280,
+		 0.500000000000019206858326015208,
+		 0.166666666666984014666397229121,
+		 0.041666666666110491190622155955,
+		 0.008333333327800835146903501993,
+		 0.001388888894063186997887560103,
+		 0.000198412739277311890541063977,
+		 0.000024801566833585381209939524,
+		 0.000002755586350219122514855659,
+		 0.000000275607356160477811864927,
+		 0.000000025299506379442070029551,
+		 0.000000002073772366009083061987}};
 
 	double d1, d2, d4, d8, y;
 	__m256d d14, d58, d9c;
@@ -880,7 +923,7 @@ fpr_expm_p63(fpr x, fpr ccs)
 	d58 = FMADD(d58, _mm256_loadu_pd(&c.d[4]), d14);
 	d9c = FMADD(d9c, _mm256_loadu_pd(&c.d[8]), d58);
 	d9c = _mm256_hadd_pd(d9c, d9c);
-	y = 1.0 + _mm_cvtsd_f64(_mm256_castpd256_pd128(d9c)) // _mm256_cvtsd_f64(d9c)
+	y = 1.0 + _mm_cvtsd_f64(_mm256_castpd256_pd128(d9c))// _mm256_cvtsd_f64(d9c)
 		+ _mm_cvtsd_f64(_mm256_extractf128_pd(d9c, 1));
 	y *= ccs.v;
 
@@ -895,7 +938,7 @@ fpr_expm_p63(fpr x, fpr ccs)
 	 */
 	return (uint64_t)(int64_t)(y * fpr_ptwo63.v);
 
-#else  // yyyAVX2+0
+#else// yyyAVX2+0
 
 	/*
 	 * Normal implementation uses Horner's method, which minimizes
@@ -921,19 +964,19 @@ fpr_expm_p63(fpr x, fpr ccs)
 	y *= ccs.v;
 	return (uint64_t)(y * fpr_ptwo63.v);
 
-#endif  // yyyAVX2-
+#endif// yyyAVX2-
 }
 
-#define fpr_gm_tab   Zf(fpr_gm_tab)
+#define fpr_gm_tab Zf(fpr_gm_tab)
 extern const fpr fpr_gm_tab[];
 
-#define fpr_p2_tab   Zf(fpr_p2_tab)
+#define fpr_p2_tab Zf(fpr_p2_tab)
 extern const fpr fpr_p2_tab[];
 
 /* ====================================================================== */
 
-#else  // yyyFPEMU+0 yyyFPNATIVE+0
+#else// yyyFPEMU+0 yyyFPNATIVE+0
 
 #error No FP implementation selected
 
-#endif  // yyyFPEMU- yyyFPNATIVE-
+#endif// yyyFPEMU- yyyFPNATIVE-
