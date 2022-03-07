@@ -76,7 +76,7 @@ shake256_init_prng_from_system(shake256_context *sc)
 {
 	uint8_t seed[48];
 
-	if (!Zf(get_seed)(seed, sizeof seed)) {
+	if (!falcon_inner_get_seed(seed, sizeof seed)) {
 		return FALCON_ERR_RANDOM;
 	}
 	shake256_init(sc);
@@ -163,7 +163,7 @@ falcon_keygen_make(
 	F = g + n;
 	atmp = align_u64(F + n);
 	oldcw = set_fpu_cw(2);
-	Zf(keygen)((inner_shake256_context *)rng,
+	falcon_inner_keygen((inner_shake256_context *)rng,
 		f, g, F, NULL, NULL, logn, atmp);
 	set_fpu_cw(oldcw);
 
@@ -174,20 +174,20 @@ falcon_keygen_make(
 	sk_len = FALCON_PRIVKEY_SIZE(logn);
 	sk[0] = 0x50 + logn;
 	u = 1;
-	v = Zf(trim_i8_encode)(sk + u, sk_len - u,
-		f, logn, Zf(max_fg_bits)[logn]);
+	v = falcon_inner_trim_i8_encode(sk + u, sk_len - u,
+		f, logn, falcon_inner_max_fg_bits[logn]);
 	if (v == 0) {
 		return FALCON_ERR_INTERNAL;
 	}
 	u += v;
-	v = Zf(trim_i8_encode)(sk + u, sk_len - u,
-		g, logn, Zf(max_fg_bits)[logn]);
+	v = falcon_inner_trim_i8_encode(sk + u, sk_len - u,
+		g, logn, falcon_inner_max_fg_bits[logn]);
 	if (v == 0) {
 		return FALCON_ERR_INTERNAL;
 	}
 	u += v;
-	v = Zf(trim_i8_encode)(sk + u, sk_len - u,
-		F, logn, Zf(max_FG_bits)[logn]);
+	v = falcon_inner_trim_i8_encode(sk + u, sk_len - u,
+		F, logn, falcon_inner_max_FG_bits[logn]);
 	if (v == 0) {
 		return FALCON_ERR_INTERNAL;
 	}
@@ -202,13 +202,13 @@ falcon_keygen_make(
 	if (pubkey != NULL) {
 		h = (uint16_t *)align_u16(g + n);
 		atmp = (uint8_t *)(h + n);
-		if (!Zf(compute_public)(h, f, g, logn, atmp)) {
+		if (!falcon_inner_compute_public(h, f, g, logn, atmp)) {
 			return FALCON_ERR_INTERNAL;
 		}
 		pk = pubkey;
 		pk_len = FALCON_PUBKEY_SIZE(logn);
 		pk[0] = 0x00 + logn;
-		v = Zf(modq_encode)(pk + 1, pk_len - 1, h, logn);
+		v = falcon_inner_modq_encode(pk + 1, pk_len - 1, h, logn);
 		if (v != pk_len - 1) {
 			return FALCON_ERR_INTERNAL;
 		}
@@ -262,13 +262,13 @@ falcon_make_public(
 	f = (int8_t *)tmp;
 	g = f + n;
 	u = 1;
-	v = Zf(trim_i8_decode)(f, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(f, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
 	}
 	u += v;
-	v = Zf(trim_i8_decode)(g, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(g, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
@@ -279,7 +279,7 @@ falcon_make_public(
 	 */
 	h = (uint16_t *)align_u16(g + n);
 	atmp = (uint8_t *)(h + n);
-	if (!Zf(compute_public)(h, f, g, logn, atmp)) {
+	if (!falcon_inner_compute_public(h, f, g, logn, atmp)) {
 		return FALCON_ERR_FORMAT;
 	}
 
@@ -289,7 +289,7 @@ falcon_make_public(
 	pk = pubkey;
 	pk_len = FALCON_PUBKEY_SIZE(logn);
 	pk[0] = 0x00 + logn;
-	v = Zf(modq_encode)(pk + 1, pk_len - 1, h, logn);
+	v = falcon_inner_modq_encode(pk + 1, pk_len - 1, h, logn);
 	if (v != pk_len - 1) {
 		return FALCON_ERR_INTERNAL;
 	}
@@ -397,19 +397,19 @@ falcon_sign_dyn_finish(shake256_context *rng,
 	sv = (int16_t *)hm;
 	atmp = align_u64(hm + n);
 	u = 1;
-	v = Zf(trim_i8_decode)(f, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(f, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
 	}
 	u += v;
-	v = Zf(trim_i8_decode)(g, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(g, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
 	}
 	u += v;
-	v = Zf(trim_i8_decode)(F, logn, Zf(max_FG_bits)[logn],
+	v = falcon_inner_trim_i8_decode(F, logn, falcon_inner_max_FG_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
@@ -418,7 +418,7 @@ falcon_sign_dyn_finish(shake256_context *rng,
 	if (u != privkey_len) {
 		return FALCON_ERR_FORMAT;
 	}
-	if (!Zf(complete_private)(G, f, g, F, logn, atmp)) {
+	if (!falcon_inner_complete_private(G, f, g, F, logn, atmp)) {
 		return FALCON_ERR_FORMAT;
 	}
 
@@ -441,16 +441,16 @@ falcon_sign_dyn_finish(shake256_context *rng,
 		 */
 		*(inner_shake256_context *)hash_data = sav_hash_data;
 		if (sig_type == FALCON_SIG_CT) {
-			Zf(hash_to_point_ct)(
+			falcon_inner_hash_to_point_ct(
 				(inner_shake256_context *)hash_data,
 				hm, logn, atmp);
 		} else {
-			Zf(hash_to_point_vartime)(
+			falcon_inner_hash_to_point_vartime(
 				(inner_shake256_context *)hash_data,
 				hm, logn);
 		}
 		oldcw = set_fpu_cw(2);
-		Zf(sign_dyn)(sv, (inner_shake256_context *)rng,
+		falcon_inner_sign_dyn(sv, (inner_shake256_context *)rng,
 			f, g, F, G, hm, logn, atmp);
 		set_fpu_cw(oldcw);
 		es = sig;
@@ -462,7 +462,7 @@ falcon_sign_dyn_finish(shake256_context *rng,
 
 		case FALCON_SIG_COMPRESSED:
 			es[0] = 0x30 + logn;
-			v = Zf(comp_encode)(es + u, es_len - u, sv, logn);
+			v = falcon_inner_comp_encode(es + u, es_len - u, sv, logn);
 			if (v == 0) {
 				return FALCON_ERR_SIZE;
 			}
@@ -470,7 +470,7 @@ falcon_sign_dyn_finish(shake256_context *rng,
 		case FALCON_SIG_PADDED:
 			es[0] = 0x30 + logn;
 			tu = FALCON_SIG_PADDED_SIZE(logn);
-			v = Zf(comp_encode)(es + u, tu - u, sv, logn);
+			v = falcon_inner_comp_encode(es + u, tu - u, sv, logn);
 			if (v == 0) {
 				/*
 				 * Signature does not fit, loop.
@@ -484,8 +484,8 @@ falcon_sign_dyn_finish(shake256_context *rng,
 			break;
 		case FALCON_SIG_CT:
 			es[0] = 0x50 + logn;
-			v = Zf(trim_i16_encode)(es + u, es_len - u,
-				sv, logn, Zf(max_sig_bits)[logn]);
+			v = falcon_inner_trim_i16_encode(es + u, es_len - u,
+				sv, logn, falcon_inner_max_sig_bits[logn]);
 			if (v == 0) {
 				return FALCON_ERR_SIZE;
 			}
@@ -544,19 +544,19 @@ falcon_expand_privkey(void *expanded_key, size_t expanded_key_len,
 	G = F + n;
 	atmp = align_u64(G + n);
 	u = 1;
-	v = Zf(trim_i8_decode)(f, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(f, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
 	}
 	u += v;
-	v = Zf(trim_i8_decode)(g, logn, Zf(max_fg_bits)[logn],
+	v = falcon_inner_trim_i8_decode(g, logn, falcon_inner_max_fg_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
 	}
 	u += v;
-	v = Zf(trim_i8_decode)(F, logn, Zf(max_FG_bits)[logn],
+	v = falcon_inner_trim_i8_decode(F, logn, falcon_inner_max_FG_bits[logn],
 		sk + u, privkey_len - u);
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
@@ -565,7 +565,7 @@ falcon_expand_privkey(void *expanded_key, size_t expanded_key_len,
 	if (u != privkey_len) {
 		return FALCON_ERR_FORMAT;
 	}
-	if (!Zf(complete_private)(G, f, g, F, logn, atmp)) {
+	if (!falcon_inner_complete_private(G, f, g, F, logn, atmp)) {
 		return FALCON_ERR_FORMAT;
 	}
 
@@ -575,7 +575,7 @@ falcon_expand_privkey(void *expanded_key, size_t expanded_key_len,
 	*(uint8_t *)expanded_key = logn;
 	expkey = align_fpr((uint8_t *)expanded_key + 1);
 	oldcw = set_fpu_cw(2);
-	Zf(expand_privkey)(expkey, f, g, F, G, logn, atmp);
+	falcon_inner_expand_privkey(expkey, f, g, F, G, logn, atmp);
 	set_fpu_cw(oldcw);
 	return 0;
 }
@@ -655,16 +655,16 @@ falcon_sign_tree_finish(shake256_context *rng,
 		 */
 		*(inner_shake256_context *)hash_data = sav_hash_data;
 		if (sig_type == FALCON_SIG_CT) {
-			Zf(hash_to_point_ct)(
+			falcon_inner_hash_to_point_ct(
 				(inner_shake256_context *)hash_data,
 				hm, logn, atmp);
 		} else {
-			Zf(hash_to_point_vartime)(
+			falcon_inner_hash_to_point_vartime(
 				(inner_shake256_context *)hash_data,
 				hm, logn);
 		}
 		oldcw = set_fpu_cw(2);
-		Zf(sign_tree)(sv, (inner_shake256_context *)rng,
+		falcon_inner_sign_tree(sv, (inner_shake256_context *)rng,
 			expkey, hm, logn, atmp);
 		set_fpu_cw(oldcw);
 		es = sig;
@@ -676,7 +676,7 @@ falcon_sign_tree_finish(shake256_context *rng,
 
 		case FALCON_SIG_COMPRESSED:
 			es[0] = 0x30 + logn;
-			v = Zf(comp_encode)(es + u, es_len - u, sv, logn);
+			v = falcon_inner_comp_encode(es + u, es_len - u, sv, logn);
 			if (v == 0) {
 				return FALCON_ERR_SIZE;
 			}
@@ -684,7 +684,7 @@ falcon_sign_tree_finish(shake256_context *rng,
 		case FALCON_SIG_PADDED:
 			es[0] = 0x30 + logn;
 			tu = FALCON_SIG_PADDED_SIZE(logn);
-			v = Zf(comp_encode)(es + u, tu - u, sv, logn);
+			v = falcon_inner_comp_encode(es + u, tu - u, sv, logn);
 			if (v == 0) {
 				/*
 				 * Signature does not fit, loop.
@@ -698,8 +698,8 @@ falcon_sign_tree_finish(shake256_context *rng,
 			break;
 		case FALCON_SIG_CT:
 			es[0] = 0x50 + logn;
-			v = Zf(trim_i16_encode)(es + u, es_len - u,
-				sv, logn, Zf(max_sig_bits)[logn]);
+			v = falcon_inner_trim_i16_encode(es + u, es_len - u,
+				sv, logn, falcon_inner_max_sig_bits[logn]);
 			if (v == 0) {
 				return FALCON_ERR_SIZE;
 			}
@@ -856,7 +856,7 @@ falcon_verify_finish(const void *sig, size_t sig_len, int sig_type,
 	/*
 	 * Decode public key.
 	 */
-	if (Zf(modq_decode)(h, logn, pk + 1, pubkey_len - 1)
+	if (falcon_inner_modq_decode(h, logn, pk + 1, pubkey_len - 1)
 		!= pubkey_len - 1)
 	{
 		return FALCON_ERR_FORMAT;
@@ -867,10 +867,10 @@ falcon_verify_finish(const void *sig, size_t sig_len, int sig_type,
 	 */
 	u = 41;
 	if (ct) {
-		v = Zf(trim_i16_decode)(sv, logn,
-			Zf(max_sig_bits)[logn], es + u, sig_len - u);
+		v = falcon_inner_trim_i16_decode(sv, logn,
+								falcon_inner_max_sig_bits[logn], es + u, sig_len - u);
 	} else {
-		v = Zf(comp_decode)(sv, logn, es + u, sig_len - u);
+		v = falcon_inner_comp_decode(sv, logn, es + u, sig_len - u);
 	}
 	if (v == 0) {
 		return FALCON_ERR_FORMAT;
@@ -899,18 +899,18 @@ falcon_verify_finish(const void *sig, size_t sig_len, int sig_type,
 	 */
 	shake256_flip(hash_data);
 	if (ct) {
-		Zf(hash_to_point_ct)(
+		falcon_inner_hash_to_point_ct(
 			(inner_shake256_context *)hash_data, hm, logn, atmp);
 	} else {
-		Zf(hash_to_point_vartime)(
+		falcon_inner_hash_to_point_vartime(
 			(inner_shake256_context *)hash_data, hm, logn);
 	}
 
 	/*
 	 * Verify signature.
 	 */
-	Zf(to_ntt_monty)(h, logn);
-	if (!Zf(verify_raw)(hm, sv, h, logn, atmp)) {
+	falcon_inner_to_ntt_monty(h, logn);
+	if (!falcon_inner_verify_raw(hm, sv, h, logn, atmp)) {
 		return FALCON_ERR_BADSIG;
 	}
 	return 0;

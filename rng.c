@@ -56,8 +56,7 @@
 #endif
 
 /* see inner.h */
-int
-Zf(get_seed)(void *seed, size_t len)
+int falcon_inner_get_seed(void *seed, size_t len)
 {
 	(void)seed;
 	if (len == 0) {
@@ -116,8 +115,7 @@ Zf(get_seed)(void *seed, size_t len)
 // yyyNIST- yyyPQCLEAN-
 
 /* see inner.h */
-void
-Zf(prng_init)(prng *p, inner_shake256_context *src)
+void falcon_inner_prng_init(prng *p, inner_shake256_context *src)
 {
 #if FALCON_LE  // yyyLE+1
 	inner_shake256_extract(src, p->state.d, 56);
@@ -145,7 +143,7 @@ Zf(prng_init)(prng *p, inner_shake256_context *src)
 	th = *(uint32_t *)(p->state.d + 52);
 	*(uint64_t *)(p->state.d + 48) = tl + (th << 32);
 #endif  // yyyLE-
-	Zf(prng_refill)(p);
+	falcon_inner_prng_refill(p);
 }
 
 /*
@@ -163,8 +161,7 @@ Zf(prng_init)(prng *p, inner_shake256_context *src)
  * The block counter is XORed into the first 8 bytes of the IV.
  */
 TARGET_AVX2
-void
-Zf(prng_refill)(prng *p)
+void falcon_inner_prng_refill(prng *p)
 {
 #if FALCON_AVX2 // yyyAVX2+1
 
@@ -355,8 +352,7 @@ Zf(prng_refill)(prng *p)
 }
 
 /* see inner.h */
-void
-Zf(prng_get_bytes)(prng *p, void *dst, size_t len)
+void falcon_inner_prng_get_bytes(prng *p, void *dst, size_t len)
 {
 	uint8_t *buf;
 
@@ -373,7 +369,7 @@ Zf(prng_get_bytes)(prng *p, void *dst, size_t len)
 		len -= clen;
 		p->ptr += clen;
 		if (p->ptr == sizeof p->buf.d) {
-			Zf(prng_refill)(p);
+			falcon_inner_prng_refill(p);
 		}
 	}
 }

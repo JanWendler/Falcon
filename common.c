@@ -32,8 +32,7 @@
 #include "inner.h"
 
 /* see inner.h */
-void
-Zf(hash_to_point_vartime)(
+void falcon_inner_hash_to_point_vartime(
 	inner_shake256_context *sc,
 	uint16_t *x, unsigned logn)
 {
@@ -67,8 +66,7 @@ Zf(hash_to_point_vartime)(
 }
 
 /* see inner.h */
-void
-Zf(hash_to_point_ct)(
+void falcon_inner_hash_to_point_ct(
 	inner_shake256_context *sc,
 	uint16_t *x, unsigned logn, uint8_t *tmp)
 {
@@ -253,8 +251,7 @@ static const uint32_t l2bound[] = {
 };
 
 /* see inner.h */
-int
-Zf(is_short)(
+int falcon_inner_is_short(
 	const int16_t *s1, const int16_t *s2, unsigned logn)
 {
 	/*
@@ -284,8 +281,7 @@ Zf(is_short)(
 }
 
 /* see inner.h */
-int
-Zf(is_short_half)(
+int falcon_inner_is_short_half(
 	uint32_t sqn, const int16_t *s2, unsigned logn)
 {
 	size_t n, u;

@@ -168,8 +168,7 @@
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(FFT)(fpr *f, unsigned logn)
+void falcon_inner_FFT(fpr *f, unsigned logn)
 {
 	/*
 	 * FFT algorithm in bit-reversal order uses the following
@@ -301,8 +300,7 @@ Zf(FFT)(fpr *f, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(iFFT)(fpr *f, unsigned logn)
+void falcon_inner_iFFT(fpr *f, unsigned logn)
 {
 	/*
 	 * Inverse FFT algorithm in bit-reversal order uses the following
@@ -450,8 +448,7 @@ Zf(iFFT)(fpr *f, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_add)(
+void falcon_inner_poly_add(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, u;
@@ -479,8 +476,7 @@ Zf(poly_add)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_sub)(
+void falcon_inner_poly_sub(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, u;
@@ -508,8 +504,7 @@ Zf(poly_sub)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_neg)(fpr *a, unsigned logn)
+void falcon_inner_poly_neg(fpr *a, unsigned logn)
 {
 	size_t n, u;
 
@@ -537,8 +532,7 @@ Zf(poly_neg)(fpr *a, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_adj_fft)(fpr *a, unsigned logn)
+void falcon_inner_poly_adj_fft(fpr *a, unsigned logn)
 {
 	size_t n, u;
 
@@ -566,8 +560,7 @@ Zf(poly_adj_fft)(fpr *a, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_mul_fft)(
+void falcon_inner_poly_mul_fft(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -616,8 +609,7 @@ Zf(poly_mul_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_muladj_fft)(
+void falcon_inner_poly_muladj_fft(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -666,8 +658,7 @@ Zf(poly_muladj_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_mulselfadj_fft)(fpr *a, unsigned logn)
+void falcon_inner_poly_mulselfadj_fft(fpr *a, unsigned logn)
 {
 	/*
 	 * Since each coefficient is multiplied with its own conjugate,
@@ -716,8 +707,7 @@ Zf(poly_mulselfadj_fft)(fpr *a, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_mulconst)(fpr *a, fpr x, unsigned logn)
+void falcon_inner_poly_mulconst(fpr *a, fpr x, unsigned logn)
 {
 	size_t n, u;
 
@@ -745,8 +735,7 @@ Zf(poly_mulconst)(fpr *a, fpr x, unsigned logn)
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_div_fft)(
+void falcon_inner_poly_div_fft(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -803,8 +792,7 @@ Zf(poly_div_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_invnorm2_fft)(fpr *restrict d,
+void falcon_inner_poly_invnorm2_fft(fpr *restrict d,
 	const fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -863,8 +851,7 @@ Zf(poly_invnorm2_fft)(fpr *restrict d,
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_add_muladj_fft)(fpr *restrict d,
+void falcon_inner_poly_add_muladj_fft(fpr *restrict d,
 	const fpr *restrict F, const fpr *restrict G,
 	const fpr *restrict f, const fpr *restrict g, unsigned logn)
 {
@@ -947,8 +934,7 @@ Zf(poly_add_muladj_fft)(fpr *restrict d,
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_mul_autoadj_fft)(
+void falcon_inner_poly_mul_autoadj_fft(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -984,8 +970,7 @@ Zf(poly_mul_autoadj_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_div_autoadj_fft)(
+void falcon_inner_poly_div_autoadj_fft(
 	fpr *restrict a, const fpr *restrict b, unsigned logn)
 {
 	size_t n, hn, u;
@@ -1028,8 +1013,7 @@ Zf(poly_div_autoadj_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_LDL_fft)(
+void falcon_inner_poly_LDL_fft(
 	const fpr *restrict g00,
 	fpr *restrict g01, fpr *restrict g11, unsigned logn)
 {
@@ -1115,8 +1099,7 @@ Zf(poly_LDL_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_LDLmv_fft)(
+void falcon_inner_poly_LDLmv_fft(
 	fpr *restrict d11, fpr *restrict l10,
 	const fpr *restrict g00, const fpr *restrict g01,
 	const fpr *restrict g11, unsigned logn)
@@ -1203,8 +1186,7 @@ Zf(poly_LDLmv_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_split_fft)(
+void falcon_inner_poly_split_fft(
 	fpr *restrict f0, fpr *restrict f1,
 	const fpr *restrict f, unsigned logn)
 {
@@ -1310,8 +1292,7 @@ Zf(poly_split_fft)(
 
 /* see inner.h */
 TARGET_AVX2
-void
-Zf(poly_merge_fft)(
+void falcon_inner_poly_merge_fft(
 	fpr *restrict f,
 	const fpr *restrict f0, const fpr *restrict f1, unsigned logn)
 {
