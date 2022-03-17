@@ -422,7 +422,7 @@ ffSampling_fft_dyntree(void* samp_ctx, fpr* t0, fpr* t1, fpr* g00, fpr* g01, fpr
 
 /*
  * Perform Fast Fourier Sampling for target vector t and LDL tree T.
- * tmp[] must have size for at least two polynomials of size 2^logn.
+ * tmp[] must  logn.
  */
 TARGET_AVX2
 static void

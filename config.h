@@ -63,7 +63,7 @@
  * FALCON_ASM_CORTEXM4 is defined to 1, in which case the emulated code
  * will be used.
  *
-#define FALCON_FPNATIVE   1
+#define FALCON_FPNATIVE   0
  */
 
 /*
@@ -108,7 +108,7 @@
  * opcode (multiplication of two 32-bit unsigned integers with a 64-bit
  * result) is NOT constant-time.
  *
-#define FALCON_ASM_CORTEXM4   1
+#define FALCON_ASM_CORTEXM4   0
  */
 
 /*
@@ -118,7 +118,7 @@
  * and 64-bit modes), and run only on systems that offer the AVX2
  * opcodes. Some operations leverage AVX2 for better performance.
  *
-#define FALCON_AVX2   1
+#define FALCON_AVX2   0
  */
 
 /*
@@ -131,7 +131,7 @@
  * and signatures might theoretically change, but only with low probability,
  * less than 2^(-40); produced signatures are still safe and interoperable).
  *
-#define FALCON_FMA   1
+#define FALCON_FMA   0
  */
 
 /*

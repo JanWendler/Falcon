@@ -36,28 +36,28 @@
 void
 shake256_init(shake256_context *sc)
 {
-	inner_shake256_init((inner_shake256_context *)sc);
+	falcon_inner_i_shake256_init((inner_shake256_context *)sc);
 }
 
 /* see falcon.h */
 void
 shake256_inject(shake256_context *sc, const void *data, size_t len)
 {
-	inner_shake256_inject((inner_shake256_context *)sc, data, len);
+	falcon_inner_i_shake256_inject((inner_shake256_context *)sc, data, len);
 }
 
 /* see falcon.h */
 void
 shake256_flip(shake256_context *sc)
 {
-	inner_shake256_flip((inner_shake256_context *)sc);
+	falcon_inner_i_shake256_flip((inner_shake256_context *)sc);
 }
 
 /* see falcon.h */
 void
 shake256_extract(shake256_context *sc, void *out, size_t len)
 {
-	inner_shake256_extract((inner_shake256_context *)sc, out, len);
+	falcon_inner_i_shake256_extract((inner_shake256_context *)sc, out, len);
 }
 
 /* see falcon.h */
@@ -76,9 +76,11 @@ shake256_init_prng_from_system(shake256_context *sc)
 {
 	uint8_t seed[48];
 
+#if !FALCON_HLS
 	if (!falcon_inner_get_seed(seed, sizeof seed)) {
 		return FALCON_ERR_RANDOM;
 	}
+#endif
 	shake256_init(sc);
 	shake256_inject(sc, seed, sizeof seed);
 	shake256_flip(sc);

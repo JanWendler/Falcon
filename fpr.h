@@ -756,7 +756,32 @@ fpr_sqrt(fpr x)
 	 * Falcon never actually calls sqrt() on a negative value, but
 	 * the dependency to libm will still be there.
 	 */
+#ifndef FALCON_HLS
+#define FALCON_HLS 0
+#endif
 
+#if FALCON_HLS
+	/// calculate the sqrt of a number by calculating 1/sqrt(x) * x
+	/// \param x the radical
+	/// \return sqrt of x
+
+	const double precision = 1e-50;
+	double val = x.v;
+	double last;
+	if (x.v == 1 || x.v == 0) return x;
+	//find a good initial guess
+	val = sqrtEst(val, x.v);
+	val = sqrtEst(val, x.v);
+	//start with unstable 1/sqrt now that we have a decent guess
+	val = invSqrtEst(1 / val, x.v);
+	do {
+		last = val;
+		val = invSqrtEst(val, x.v);
+	} while ((val - last) > precision);
+	// sqrt(x) = x/sqrt(x)
+	val = x.v * val;
+	return FPR(val);
+#else
 #if FALCON_AVX2// yyyAVX2+1
 	fpr_sqrt_avx2(&x.v);
 	return x;
@@ -824,31 +849,10 @@ fpr_sqrt(fpr x)
 #endif
 	return x;
 #else
-
-	/// calculate the sqrt of a number by calculating 1/sqrt(x) * x
-	/// \param x the radical
-	/// \return sqrt of x
-
-	const double precision = 1e-50;
-	double val = x.v;
-	double last;
-	if (x.v == 1 || x.v == 0) return x;
-	//find a good initial guess
-	val = sqrtEst(val, x.v);
-	val = sqrtEst(val, x.v);
-	//start with unstable 1/sqrt now that we have a decent guess
-	val = invSqrtEst(1 / val, x.v);
-	do {
-		last = val;
-		val = invSqrtEst(val, x.v);
-	} while ((val - last) > precision);
-	// sqrt(x) = x/sqrt(x)
-	val = x.v * val;
-	return FPR(val);
-
-	//return FPR(sqrt(x.v));
+	return FPR(sqrt(x.v));
 #endif
 #endif// yyyAVX2-
+#endif
 }
 static inline double invSqrtEst(double val, double x)
 {

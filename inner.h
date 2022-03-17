@@ -84,6 +84,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define FALCON_HLS 1
+
 #if defined FALCON_AVX2 && FALCON_AVX2 // yyyAVX2+1
 /*
  * This implementation uses AVX2 and optionally FMA intrinsics.
@@ -196,8 +198,8 @@
 #define FALCON_FPEMU      1
 #define FALCON_FPNATIVE   0
 #else
-#define FALCON_FPEMU      0
-#define FALCON_FPNATIVE   1
+#define FALCON_FPEMU      1
+#define FALCON_FPNATIVE   0
 #endif
 
 #elif defined FALCON_FPEMU && !defined FALCON_FPNATIVE
@@ -254,7 +256,7 @@
 	|| (defined __APPLE__ && defined __MACH__)
 #define FALCON_RAND_URANDOM   1
 #else
-#define FALCON_RAND_URANDOM   0
+#define FALCON_RAND_URANDOM   1
 #endif
 #endif
 
@@ -420,10 +422,10 @@ typedef struct {
 	uint64_t dptr;
 } inner_shake256_context;
 
-#define inner_shake256_init      Zf(i_shake256_init)
-#define inner_shake256_inject    Zf(i_shake256_inject)
-#define inner_shake256_flip      Zf(i_shake256_flip)
-#define inner_shake256_extract   Zf(i_shake256_extract)
+#define inner_shake256_init      falcon_inner_i_shake256_init
+#define inner_shake256_inject    falcon_inner_i_shake256_inject
+#define inner_shake256_flip      falcon_inner_i_shake256_flip
+#define inner_shake256_extract   falcon_inner_i_shake256_extract
 
 void falcon_inner_i_shake256_init(
 	inner_shake256_context *sc);
