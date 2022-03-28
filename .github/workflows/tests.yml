@@ -40,7 +40,7 @@ jobs:
         run: cmake --build . --config $BUILD_TYPE
         
       - name: Run Test
-        run: ${{github.workspace}}/build/FalconTest
+        run: ${{github.workspace}}/build/TestFalcon
         
       - name: Run Speed
         run: ${{github.workspace}}/build/SpeedFalcon
