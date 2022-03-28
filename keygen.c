@@ -3484,14 +3484,14 @@ solve_NTRU_binary_depth1(unsigned logn_top,
 		 * From that point onward, we only need tables for
 		 * degree n, so we can save some space.
 		 */
-		if (depth > 0) { /* always true */
+		//if (depth > 0) { /* always true */
 			memmove(gm + n, igm, n * sizeof *igm);
 			igm = gm + n;
 			memmove(igm + n, fx, n * sizeof *ft);
 			fx = igm + n;
 			memmove(fx + n, gx, n * sizeof *gt);
 			gx = fx + n;
-		}
+		//}
 
 		/*
 		 * Get F' and G' modulo p and in NTT representation

@@ -1651,7 +1651,7 @@ int falcon_inner_sampler(void* ctx, fpr mu, fpr isigma)
 		 * can be said to be constant-time.
 		 */
 		x = fpr_mul(fpr_sqr(fpr_sub(fpr_of(z), r)), dss);
-		x = fpr_sub(x, fpr_mul(fpr_of(z0 * z0), fpr_inv_2sqrsigma0));
+		x = fpr_sub(x, fpr_mul(fpr_of((int64_t)z0 * (int64_t)z0), fpr_inv_2sqrsigma0));
 		if (BerExp(&spc->p, x, ccs))
 		{
 			/*

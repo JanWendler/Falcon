@@ -173,7 +173,7 @@ extern "C" {
  *
  * A private key, in its encoded format, can be used as parameter to
  * falcon_sign_dyn(). An "expanded private key" is computed with
- * falcon_expand_privkey(), to be used with falcon_sign_tree(). The
+ * falcon_expand_privkey(), to be used with falcon_sign_treefalcon_sign_tree(). The
  * expanded private key is much larger than the encoded private key, and
  * its format is not portable. Its size (in bytes) is provided by
  * FALCON_EXPANDEDKEY_SIZE. There are no specific alignment requirements
