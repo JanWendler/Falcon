@@ -1,4 +1,4 @@
-[![ci](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml/badge.svg)](https://github.com/JanWendler/Falcon)
+[![ci](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml/badge.svg)](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml)
 [![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/JanWendler/Falcon.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JanWendler/Falcon/context:cpp)
 
 This is a modified Falcon implementation that alows the code to be converted to VHDL via HLS.
