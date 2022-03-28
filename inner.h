@@ -83,6 +83,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #define FALCON_HLS 1
 
@@ -256,13 +257,13 @@
 	|| (defined __APPLE__ && defined __MACH__)
 #define FALCON_RAND_URANDOM   1
 #else
-#define FALCON_RAND_URANDOM   1
+#define FALCON_RAND_URANDOM   0
 #endif
 #endif
 
 #ifndef FALCON_RAND_WIN32
 #if defined _WIN32 || defined _WIN64
-#define FALCON_RAND_WIN32   1
+#define FALCON_RAND_WIN32   0
 #else
 #define FALCON_RAND_WIN32   0
 #endif
@@ -1162,6 +1163,24 @@ int falcon_inner_sampler(void *ctx, fpr mu, fpr isigma);
 
 TARGET_AVX2
 int falcon_inner_gaussian0_sampler(prng *p);
+
+
+/* Structure of a stack node. Linked List implementation is used for
+   stack. A stack node contains a pointer to tree node and a pointer to
+   next stack node */
+struct ffSampling_fft_param {
+	void* samp_ctx;
+	fpr* z0;
+	fpr* z1;
+	const fpr* tree;
+	const fpr* tree0;
+	const fpr* tree1;
+	const fpr* t0;
+	const fpr* t1;
+	unsigned logn;
+	fpr* tmp;
+	bool isDone;
+};
 
 /* ==================================================================== */
 
