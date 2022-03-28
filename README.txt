@@ -1,6 +1,3 @@
-[![ci](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml/badge.svg)](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml)
-
-
 FALCON IMPLEMENTATION
 =====================
 
