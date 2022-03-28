@@ -1,0 +1,17 @@
+name: Tester
+
+on: push
+
+jobs:
+  test:
+    name: Falcon code base
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      - name: Run Tester
+        uses: github/tester@v3
+        env:
+          DEFAULT_BRANCH: master
+          GITHUB_TOKEN: ${{ secret.GITHUB_TOKEN }}
