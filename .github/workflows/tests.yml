@@ -39,14 +39,8 @@ jobs:
         # Execute the build.  You can specify a specific target with "--target <NAME>"
         run: cmake --build . --config $BUILD_TYPE
         
-      - name: Build
-        working-directory: ${{github.workspace}}/build
-        shell: bash
-        # Execute the build.  You can specify a specific target with "--target <NAME>"
-        run: pwd [-LP]; ls -R
-        
       - name: Run Test
-        run: ${{github.workspace}}/build/bin/FalconTest
+        run: ${{github.workspace}}/build/FalconTest
         
       - name: Run Speed
-        run: ${{github.workspace}}/build/bin/SpeedFalcon
+        run: ${{github.workspace}}/build/SpeedFalcon
