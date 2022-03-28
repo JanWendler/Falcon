@@ -1,4 +1,4 @@
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/JanWendler/Falcon/Build%20and%20Test?label=Build%20and%20Tests&logo=Github)](https://github.com/JanWendler/Falcon/actions/tests.yml)
+[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/JanWendler/Falcon/Build%20and%20Test?label=Build%20and%20Tests&logo=Github)](https://github.com/JanWendler/Falcon/actions/workflow/tests.yml)
 [![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/JanWendler/Falcon?label=Code%20Quality&logo=LGTM)](https://lgtm.com/projects/g/JanWendler/Falcon/context:cpp)
 
 This is a modified Falcon implementation that alows the code to be converted to VHDL via HLS.
