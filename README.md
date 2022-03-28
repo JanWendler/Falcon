@@ -1,5 +1,5 @@
-![ci](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml/badge.svg)
-![LGTM Grade](https://img.shields.io/lgtm/grade/cpp/github/JanWendler/Falcon?label=Code%20Quality)
+[![ci](https://github.com/JanWendler/Falcon/actions/workflows/tests.yml/badge.svg)](https://github.com/JanWendler/Falcon)
+[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/JanWendler/Falcon.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/JanWendler/Falcon/context:cpp)
 
 This is a modified Falcon implementation that alows the code to be converted to VHDL via HLS.
 Vitis HLS is used to convert the code. 
