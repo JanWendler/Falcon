@@ -10,3 +10,4 @@ HLS does not allow for:
 - dynamic memory allocation (malloc, alloc, free)
 - restrict
 
+The Code can not be converted just yet, as the recursions is quite tricky to convert to an iterative form
