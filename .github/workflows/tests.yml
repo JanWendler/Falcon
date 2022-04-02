@@ -44,3 +44,6 @@ jobs:
         
       - name: Run Speed
         run: ${{github.workspace}}/build/SpeedFalcon
+
+      - name: Run GTest
+        run: ${{github.workspace}}/build/GTestFalcon

@@ -72,7 +72,9 @@
  *    proper, or integer-based emulation is used, the set_fpu_cw()
  *    function does nothing, so it can be called systematically.
  */
-
+#ifdef __cplusplus
+extern "C" {
+#endif
 // yyyPQCLEAN+0 yyyNIST+0 yyySUPERCOP+0
 #include "config.h"
 // yyyPQCLEAN- yyyNIST- yyySUPERCOP-
@@ -1184,4 +1186,8 @@ struct ffSampling_fft_param {
 
 /* ==================================================================== */
 
+#endif
+
+#ifdef __cplusplus
+}
 #endif

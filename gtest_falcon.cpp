@@ -1,3 +1,7 @@
+//
+// Created by jan.wendler on 31.03.2022.
+//
+
 /*
  * Test code for Falcon implementation.
  *
@@ -28,6 +32,8 @@
  *
  * @author   Thomas Pornin <thomas.pornin@nccgroup.com>
  */
+
+#include <gtest/gtest.h>
 
 #include <math.h>
 #include <stdio.h>
@@ -212,25 +218,17 @@ test_SHAKE256_KAT(const char* hexsrc, const char* hexout,
 static void
 test_SHAKE256(void)
 {
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
 	size_t tlen;
 
 	printf("Test SHAKE256: ");
 	fflush(stdout);
 	tlen = 1000;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 	test_SHAKE256_KAT("", "46b9dd2b0ba88d13233b3feb743eeb243fcd52ea62b81b82b50c27646ed5762fd75dc4ddd8c0f200cb05019d67b592f6fc821c49479ab48640292eacb3b7c4be", tmp, tlen);
 	test_SHAKE256_KAT("dc5a100fa16df1583c79722a0d72833d3bf22c109b8889dbd35213c6bfce205813edae3242695cfd9f59b9a1c203c1b72ef1a5423147cb990b5316a85266675894e2644c3f9578cebe451a09e58c53788fe77a9e850943f8a275f830354b0593a762bac55e984db3e0661eca3cb83f67a6fb348e6177f7dee2df40c4322602f094953905681be3954fe44c4c902c8f6bba565a788b38f13411ba76ce0f9f6756a2a2687424c5435a51e62df7a8934b6e141f74c6ccf539e3782d22b5955d3baf1ab2cf7b5c3f74ec2f9447344e937957fd7f0bdfec56d5d25f61cde18c0986e244ecf780d6307e313117256948d4230ebb9ea62bb302cfe80d7dfebabc4a51d7687967ed5b416a139e974c005fff507a96", "2bac5716803a9cda8f9e84365ab0a681327b5ba34fdedfb1c12e6e807f45284b", tmp, tlen);
 	test_SHAKE256_KAT("8d8001e2c096f1b88e7c9224a086efd4797fbf74a8033a2d422a2b6b8f6747e4", "2e975f6a8a14f0704d51b13667d8195c219f71e6345696c49fa4b9d08e9225d3d39393425152c97e71dd24601c11abcfa0f12f53c680bd3ae757b8134a9c10d429615869217fdd5885c4db174985703a6d6de94a667eac3023443a8337ae1bc601b76d7d38ec3c34463105f0d3949d78e562a039e4469548b609395de5a4fd43c46ca9fd6ee29ada5efc07d84d553249450dab4a49c483ded250c9338f85cd937ae66bb436f3b4026e859fda1ca571432f3bfc09e7c03ca4d183b741111ca0483d0edabc03feb23b17ee48e844ba2408d9dcfd0139d2e8c7310125aee801c61ab7900d1efc47c078281766f361c5e6111346235e1dc38325666c", tmp, tlen);
-#if !FALCON_HLS
 	xfree(tmp);
-#endif
 	printf("done.\n");
 	fflush(stdout);
 }
@@ -2160,19 +2158,13 @@ static void
 test_codec(void)
 {
 	unsigned logn;
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
 	size_t tlen;
 
 	printf("Test encode/decode: ");
 	fflush(stdout);
 	tlen = 8192;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 
 	for (logn = 1; logn <= 10; logn++)
 	{
@@ -2180,9 +2172,8 @@ test_codec(void)
 		printf(".");
 		fflush(stdout);
 	}
-#if !FALCON_HLS
+
 	xfree(tmp);
-#endif
 	printf(" done.\n");
 	fflush(stdout);
 }
@@ -2346,19 +2337,13 @@ test_vrfy_inner(unsigned logn, const int8_t* f, const int8_t* g,
 static void
 test_vrfy(void)
 {
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
 	size_t tlen;
 
 	printf("Test verify: ");
 	fflush(stdout);
 	tlen = 8192;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 
 	test_vrfy_inner(4, ntru_f_16, ntru_g_16, ntru_F_16, ntru_G_16,
 					ntru_h_16, ntru_pkey_16, KAT_SIG_16, tmp, tlen);
@@ -2367,9 +2352,7 @@ test_vrfy(void)
 	test_vrfy_inner(10, ntru_f_1024, ntru_g_1024, ntru_F_1024, ntru_G_1024,
 					ntru_h_1024, ntru_pkey_1024, KAT_SIG_1024, tmp, tlen);
 
-#if !FALCON_HLS
 	xfree(tmp);
-#endif
 	printf("done.\n");
 	fflush(stdout);
 }
@@ -3220,26 +3203,18 @@ static void
 test_poly(void)
 {
 	unsigned logn;
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
 	size_t tlen;
 
 	printf("Test polynomials: ");
 	fflush(stdout);
 	tlen = 40960;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 	for (logn = 1; logn <= 10; logn++)
 	{
 		test_poly_inner(logn, tmp, tlen);
 	}
-#if !FALCON_HLS
 	xfree(tmp);
-#endif
 	printf(" done.\n");
 	fflush(stdout);
 }
@@ -3712,7 +3687,7 @@ test_sampler(void)
 	fflush(stdout);
 
 	inner_shake256_init(&rng);
-	inner_shake256_inject(&rng, (const void*)"test sampler", 12);
+	inner_shake256_inject(&rng, reinterpret_cast<const uint8_t*>("test sampler"), 12);
 	inner_shake256_flip(&rng);
 	falcon_inner_prng_init(&sc.p, &rng);
 	sc.sigma_min = fpr_sigma_min[9];
@@ -3841,31 +3816,23 @@ test_sign_self(const int8_t* f, const int8_t* g,
 static void
 test_sign(void)
 {
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
 	size_t tlen;
 
 	printf("Test sign: ");
 	fflush(stdout);
 
 	tlen = 178176;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 
-	//	test_sign_self(ntru_f_16, ntru_g_16, ntru_F_16, ntru_G_16,
-	//		ntru_h_16, 4, tmp);
-	//	test_sign_self(ntru_f_512, ntru_g_512, ntru_F_512, ntru_G_512,
-	//		ntru_h_512, 9, tmp);
+	test_sign_self(ntru_f_16, ntru_g_16, ntru_F_16, ntru_G_16,
+				   ntru_h_16, 4, tmp);
+	test_sign_self(ntru_f_512, ntru_g_512, ntru_F_512, ntru_G_512,
+				   ntru_h_512, 9, tmp);
 	test_sign_self(ntru_f_1024, ntru_g_1024, ntru_F_1024, ntru_G_1024,
 				   ntru_h_1024, 10, tmp);
 
-#if !FALCON_HLS
 	xfree(tmp);
-#endif
 
 	printf("done.\n");
 	fflush(stdout);
@@ -3947,28 +3914,19 @@ test_keygen_inner(unsigned logn, uint8_t* tmp)
 static void
 test_keygen(void)
 {
-#if !FALCON_HLS
 	uint8_t* tmp;
-#endif
-
 	size_t tlen;
 	unsigned logn;
 
 	printf("Test keygen: ");
 	fflush(stdout);
 	tlen = 90112;
-#if FALCON_HLS
-	uint8_t tmp[tlen];
-#else
-	tmp = xmalloc(tlen);
-#endif
+	tmp = static_cast<uint8_t*>(xmalloc(tlen));
 	for (logn = 1; logn <= 10; logn++)
 	{
 		test_keygen_inner(logn, tmp);
 	}
-#if !FALCON_HLS
 	xfree(tmp);
-#endif
 	printf("done.\n");
 	fflush(stdout);
 }
@@ -3977,13 +3935,12 @@ static void
 test_external_API_inner(unsigned logn, shake256_context* rng)
 {
 	int i;
-#if !FALCON_HLS
-	void /**pubkey,*/ *pubkey2, *privkey, *sig, *sigpad, *sigct, *expkey;
-	uint8_t *tmpkg, *tmpmp, *tmpsd, *tmpst, *tmpvv, *tmpek;
-#endif
+	void *pubkey, *pubkey2, *privkey, *sig, *sigpad, *sigct, *expkey;
 	size_t pubkey_len, privkey_len, sig_len, sigpad_len, sigct_len;
 	size_t expkey_len;
+	uint8_t *tmpkg, *tmpmp, *tmpsd, *tmpst, *tmpvv, *tmpek;
 	size_t tmpkg_len, tmpmp_len, tmpsd_len, tmpst_len, tmpvv_len, tmpek_len;
+
 	printf("[%u]", logn);
 	fflush(stdout);
 
@@ -3994,15 +3951,6 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 	sigct_len = FALCON_SIG_CT_SIZE(logn);
 	expkey_len = FALCON_EXPANDEDKEY_SIZE(logn);
 
-#if FALCON_HLS
-	uint8_t pubkey[pubkey_len];
-	uint8_t pubkey2[pubkey_len];
-	uint8_t privkey[privkey_len];
-	uint8_t sig[sig_len];
-	uint8_t sigpad[sig_len];
-	uint8_t sigct[sigct_len];
-	uint8_t expkey[expkey_len];
-#else
 	pubkey = xmalloc(pubkey_len);
 	pubkey2 = xmalloc(pubkey_len);
 	privkey = xmalloc(privkey_len);
@@ -4010,7 +3958,6 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 	sigpad = xmalloc(sig_len);
 	sigct = xmalloc(sigct_len);
 	expkey = xmalloc(expkey_len);
-#endif
 
 	tmpkg_len = FALCON_TMPSIZE_KEYGEN(logn);
 	tmpmp_len = FALCON_TMPSIZE_MAKEPUB(logn);
@@ -4019,21 +3966,12 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 	tmpvv_len = FALCON_TMPSIZE_VERIFY(logn);
 	tmpek_len = FALCON_TMPSIZE_EXPANDPRIV(logn);
 
-#ifndef FALCON_HLS
-	tmpkg = xmalloc(tmpkg_len);
-	tmpmp = xmalloc(tmpmp_len);
-	tmpsd = xmalloc(tmpsd_len);
-	tmpst = xmalloc(tmpst_len);
-	tmpvv = xmalloc(tmpvv_len);
-	tmpek = xmalloc(tmpek_len);
-#else
-	uint8_t tmpkg[tmpkg_len];
-	uint8_t tmpmp[tmpmp_len];
-	uint8_t tmpsd[tmpsd_len];
-	uint8_t tmpst[tmpst_len];
-	uint8_t tmpvv[tmpvv_len];
-	uint8_t tmpek[tmpek_len];
-#endif
+	tmpkg = static_cast<uint8_t*>(xmalloc(tmpkg_len));
+	tmpmp = static_cast<uint8_t*>(xmalloc(tmpmp_len));
+	tmpsd = static_cast<uint8_t*>(xmalloc(tmpsd_len));
+	tmpst = static_cast<uint8_t*>(xmalloc(tmpst_len));
+	tmpvv = static_cast<uint8_t*>(xmalloc(tmpvv_len));
+	tmpek = static_cast<uint8_t*>(xmalloc(tmpek_len));
 
 	for (i = 0; i < 12; i++)
 	{
@@ -4274,7 +4212,7 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 		printf(".");
 		fflush(stdout);
 	}
-#if !FALCON_HLS
+
 	xfree(pubkey);
 	xfree(pubkey2);
 	xfree(privkey);
@@ -4288,7 +4226,6 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 	xfree(tmpst);
 	xfree(tmpvv);
 	xfree(tmpek);
-#endif
 }
 
 static void
@@ -4324,7 +4261,7 @@ dec32be(const void* src)
 {
 	const unsigned char* buf;
 
-	buf = src;
+	buf = static_cast<const unsigned char*>(src);
 	return ((uint32_t)buf[0] << 24)
 		| ((uint32_t)buf[1] << 16)
 		| ((uint32_t)buf[2] << 8)
@@ -4336,7 +4273,7 @@ enc32be(void* dst, uint32_t x)
 {
 	unsigned char* buf;
 
-	buf = dst;
+	buf = static_cast<unsigned char*>(dst);
 	buf[0] = (unsigned char)(x >> 24);
 	buf[1] = (unsigned char)(x >> 16);
 	buf[2] = (unsigned char)(x >> 8);
@@ -4477,7 +4414,7 @@ aes256_encrypt(const uint32_t* skey, void* data)
 	uint32_t t0, t1, t2, t3;
 	unsigned u;
 
-	buf = data;
+	buf = static_cast<unsigned char*>(data);
 	s0 = dec32be(buf);
 	s1 = dec32be(buf + 4);
 	s2 = dec32be(buf + 8);
@@ -4675,7 +4612,7 @@ sha1_update(sha1_context* sc, const void* data, size_t len)
 	const uint8_t* buf;
 	size_t ptr;
 
-	buf = data;
+	buf = static_cast<const uint8_t*>(data);
 	ptr = (size_t)sc->count & 63;
 	sc->count += (uint64_t)len;
 	while (len > 0)
@@ -4772,7 +4709,7 @@ sha1_print_line_with_hex(sha1_context* sc,
 	char c;
 
 	sha1_update(sc, s, strlen(s));
-	buf = data;
+	buf = static_cast<const uint8_t*>(data);
 	while (len-- > 0)
 	{
 		unsigned b;
@@ -4886,11 +4823,9 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 	int i;
 	uint8_t entropy_input[48];
 	uint8_t hhv[20], hhref[20];
-#if !FALCON_HLS
 	uint8_t *msg, *sk, *pk, *sm, *tmp;
-	fpr* esk;
-#endif
 	size_t n, sk_len, pk_len, over_len;
+	fpr* esk;
 	sha1_context hhc;
 
 	n = (size_t)1 << logn;
@@ -4904,21 +4839,13 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 	pk_len = (logn == 9) ? 897 : 1793;
 	over_len = (logn == 9) ? 690 : 1330;
 
-#if FALCON_HLS
-	uint8_t msg[3300];
-	uint8_t sk[sk_len];
-	uint8_t pk[pk_len];
-	uint8_t sm[3300 + over_len];
-	uint8_t tmp[(size_t)84 << logn];
-	fpr esk[(size_t)(8 * logn + 40) << logn];
-#else
-	msg = xmalloc(3300);
-	sk = xmalloc(sk_len);
-	pk = xmalloc(pk_len);
-	sm = xmalloc(3300 + over_len);
-	tmp = xmalloc((size_t)84 << logn);
-	esk = xmalloc((size_t)(8 * logn + 40) << logn);
-#endif
+	msg = static_cast<uint8_t*>(xmalloc(3300));
+	sk = static_cast<uint8_t*>(xmalloc(sk_len));
+	pk = static_cast<uint8_t*>(xmalloc(pk_len));
+	sm = static_cast<uint8_t*>(xmalloc(3300 + over_len));
+
+	tmp = static_cast<uint8_t*>(xmalloc((size_t)84 << logn));
+	esk = static_cast<fpr*>(xmalloc((size_t)(8 * logn + 40) << logn));
 
 	sha1_print_line_with_int(&hhc, "# Falcon-", (unsigned)n);
 	sha1_print_line(&hhc, "");
@@ -5095,7 +5022,6 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 		fflush(stdout);
 	}
 
-#if !FALCON_HLS
 	xfree(msg);
 	xfree(sk);
 	xfree(pk);
@@ -5103,7 +5029,6 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 
 	xfree(tmp);
 	xfree(esk);
-#endif
 
 	sha1_out(&hhc, hhv);
 	printf(" ");
@@ -5290,12 +5215,68 @@ test_speed(void)
 }
 #endif
 
+#define GTest 1
+#if GTest
+TEST(SHAKE256, test)
+{
+	test_SHAKE256();
+}
+TEST(codec, test)
+{
+	test_codec();
+}
+TEST(vrfy, test)
+{
+	test_vrfy();
+}
+TEST(RNG, test)
+{
+	test_RNG();
+}
+TEST(FP_block, test)
+{
+	test_FP_block();
+}
+TEST(poly, test)
+{
+	test_poly();
+}
+TEST(gaussian0_sampler, test)
+{
+	test_gaussian0_sampler();
+}
+TEST(sampler, test)
+{
+	test_sampler();
+}
+TEST(sign, test)
+{
+	test_sign();
+}
+TEST(keygen, test)
+{
+	test_keygen();
+}
+/*
+TEST(external_API, test)
+{
+	test_external_API();
+}
+ */
+TEST(KAT, 9)
+{
+	test_nist_KAT(9, "a57400cbaee7109358859a56c735a3cf048a9da2");
+}
+TEST(KAT, 10)
+{
+	test_nist_KAT(10, "affdeb3aa83bf9a2039fa9c17d65fd3e3b9828e2");
+}
+#else
 int main(void)
 {
 	unsigned old;
 
 	old = set_fpu_cw(2);
-
 	test_SHAKE256();
 	test_codec();
 	test_vrfy();
@@ -5306,11 +5287,13 @@ int main(void)
 	test_sampler();
 	test_sign();
 	test_keygen();
-	//	test_external_API();
+	test_external_API();
 	test_nist_KAT(9, "a57400cbaee7109358859a56c735a3cf048a9da2");
 	test_nist_KAT(10, "affdeb3aa83bf9a2039fa9c17d65fd3e3b9828e2");
+
 	/* test_speed(); */
 
 	set_fpu_cw(old);
 	return 0;
 }
+#endif
