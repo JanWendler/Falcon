@@ -257,7 +257,7 @@ void falcon_inner_expand_privkey(fpr* expanded_key,
 	b10 = expanded_key + skoff_b10(logn);
 	b11 = expanded_key + skoff_b11(logn);
 	tree = expanded_key + skoff_tree(logn);
-
+	size_t temp2 = skoff_tree(logn);
 	/*
 	 * We load the private key elements directly into the B0 matrix,
 	 * since B0 = [[g, -f], [G, -F]].
@@ -426,20 +426,117 @@ ffSampling_fft_dyntree(void* samp_ctx, fpr* t0, fpr* t1, fpr* g00, fpr* g01, fpr
  * tmp[] must  logn.
  */
 #if FALCON_HLS
+typedef struct stack {
+	fpr* stage0;
+	fpr* stage1;
+	fpr* stage2;
+	fpr* stage3;
+	fpr* stage4;
+	fpr* stage5;
+	fpr* stage6;
+	fpr* stage7;
+	fpr* stage8;
+	fpr* stage9;
+	fpr* stage10;
+} fpr_stack_t;
 
+void writeToLevel(fpr_stack_t* s, unsigned int level, fpr* data)
+{
+	switch (level)
+	{
+	case 0:
+		s->stage0 = data;
+		break;
+	case 1:
+		s->stage1 = data;
+		break;
+	case 2:
+		s->stage2 = data;
+		break;
+	case 3:
+		s->stage3 = data;
+		break;
+	case 4:
+		s->stage4 = data;
+		break;
+	case 5:
+		s->stage5 = data;
+		break;
+	case 6:
+		s->stage6 = data;
+		break;
+	case 7:
+		s->stage7 = data;
+		break;
+	case 8:
+		s->stage8 = data;
+		break;
+	case 9:
+		s->stage9 = data;
+		break;
+	case 10:
+		s->stage10 = data;
+		break;
+	default:
+		exit(1);
+		break;
+	}
+}
+fpr* getLvl(fpr_stack_t* s, unsigned int level)
+{
+	switch (level)
+	{
+	case 0:
+		return s->stage0;
+		break;
+	case 1:
+		return s->stage1;
+		break;
+	case 2:
+		return s->stage2;
+		break;
+	case 3:
+		return s->stage3;
+		break;
+	case 4:
+		return s->stage4;
+		break;
+	case 5:
+		return s->stage5;
+		break;
+	case 6:
+		return s->stage6;
+		break;
+	case 7:
+		return s->stage7;
+		break;
+	case 8:
+		return s->stage8;
+		break;
+	case 9:
+		return s->stage9;
+		break;
+	case 10:
+		return s->stage10;
+		break;
+	default:
+		exit(1);
+		break;
+	}
+}
 void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0, const fpr* t1, unsigned logn, fpr* tmp)
 {
 	/* set current to root of binary tree */
 	const unsigned depth = logn;
-	fpr* az0[10+1];
-	fpr* az1[10+1];
-	const fpr* atree[10+1];
-	const fpr* atree0[10+1];
-	const fpr* atree1[10+1];
-	const fpr* at0[10+1];
-	const fpr* at1[10+1];
-	fpr* atmp[10+1];
-	bool leftSideIsDone[10+1];
+	fpr_stack_t az0;
+	fpr_stack_t az1;
+	fpr_stack_t atree;
+	fpr_stack_t atree0;
+	fpr_stack_t atree1;
+	fpr_stack_t at0;
+	fpr_stack_t at1;
+	fpr_stack_t atmp;
+	bool leftSideIsDone[10 + 1];
 	bool done = 0;
 	for (int i = 0; i <= 10; ++i)
 	{
@@ -449,62 +546,59 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 	const fpr *tree0, *tree1;
 	n = (size_t)1 << logn;
 	hn = n >> 1;
-
-
-	az0[logn] = z0;
-	az1[logn] = z1;
-	atree[logn] = tree;
-	at0[logn] = t0;
-	at1[logn] = t1;
-	atmp[logn] = tmp;
-	atree0[logn] = atree[logn] + n;
-	atree1[logn] = atree[logn] + n + ffLDL_treesize(logn - 1);
-
+	writeToLevel(&az0, logn, z0);
+	writeToLevel(&az1, logn, z1);
+	writeToLevel(&atree, logn, tree);
+	writeToLevel(&at0, logn, t0);
+	writeToLevel(&at1, logn, t1);
+	writeToLevel(&atmp, logn, tmp);
+	writeToLevel(&atree0, logn, getLvl(&atree, logn) + n);
+	writeToLevel(&atree1, logn, getLvl(&atree, logn) + n + ffLDL_treesize(logn - 1));
+	unsigned temp = ffLDL_treesize(logn - 1);
 	while (!done)
 	{
 		/* Reach the left most tNode of the current tNode */
 		/*the last two nodes are inlined*/
-		if(logn > 2)
+		if (logn > 2)
 		{
 			/*check if left side is done*/
-			if(leftSideIsDone[logn])
-			{ // right
-				memcpy(atmp[logn], at1[logn], n * sizeof(*(at1[logn])));
-				falcon_inner_poly_sub(atmp[logn], az1[logn], logn);
-				falcon_inner_poly_mul_fft(atmp[logn], atree[logn], logn);
-				falcon_inner_poly_add(atmp[logn], at0[logn], logn);
-				falcon_inner_poly_split_fft(az0[logn], az0[logn] + hn, atmp[logn], logn);
+			if (leftSideIsDone[logn])
+			{// right
+				memcpy(getLvl(&atmp, logn), getLvl(&at1, logn), n * sizeof(*getLvl(&at1, logn)));
+				falcon_inner_poly_sub(getLvl(&atmp, logn), getLvl(&az1, logn), logn);
+				falcon_inner_poly_mul_fft(getLvl(&atmp, logn), getLvl(&atree, logn), logn);
+				falcon_inner_poly_add(getLvl(&atmp, logn), getLvl(&at0, logn), logn);
+				falcon_inner_poly_split_fft(getLvl(&az0, logn), getLvl(&az0, logn) + hn, getLvl(&atmp, logn), logn);
 				{
-					az0[logn-1] = atmp[logn];
-					az1[logn-1] = atmp[logn] + hn;
-					atree[logn-1] = atree0[logn];
-					at0[logn-1] = az0[logn];
-					at1[logn-1] = az0[logn] + hn;
-					atmp[logn-1] = atmp[logn] + n;
-					atree0[logn-1] = atree0[logn];
-					atree1[logn-1] = atree1[logn];
+					writeToLevel(&az0, logn - 1, getLvl(&atmp, logn));
+					writeToLevel(&az1, logn - 1, getLvl(&atmp, logn) + hn);
+					writeToLevel(&atree, logn - 1, getLvl(&atree0, logn));
+					writeToLevel(&at0, logn - 1, getLvl(&az0, logn));
+					writeToLevel(&at1, logn - 1, getLvl(&az0, logn) + hn);
+					writeToLevel(&atmp, logn - 1, getLvl(&atmp, logn) + n);
+					writeToLevel(&atree0, logn - 1, getLvl(&atree0, logn));
+					writeToLevel(&atree1, logn - 1, getLvl(&atree1, logn));
 				}
 			}
 			else
-			{ // left
+			{// left
 				n = (size_t)1 << logn;
 				hn = n >> 1;
-				atree0[logn] = atree[logn] + n;
-				atree1[logn] = atree[logn] + n + ffLDL_treesize(logn - 1);
-				falcon_inner_poly_split_fft(az1[logn], az1[logn] + hn, at1[logn], logn);
+				writeToLevel(&atree0, logn, getLvl(&atree, logn) + n);
+				writeToLevel(&atree1, logn, getLvl(&atree, logn) + n + ffLDL_treesize(logn - 1));
+				falcon_inner_poly_split_fft(getLvl(&az1, logn), getLvl(&az1, logn) + hn, getLvl(&at1, logn), logn);
 				{
-					az0[logn-1] = atmp[logn];
-					az1[logn-1] = atmp[logn] + hn;
-					atree[logn-1] = atree1[logn];
-					at0[logn-1] = az1[logn];
-					at1[logn-1] = az1[logn] + hn;
-					atmp[logn-1] = atmp[logn] + n;
-					atree0[logn-1] = atree0[logn];
-					atree1[logn-1] = atree1[logn];
+					writeToLevel(&az0, logn - 1, getLvl(&atmp, logn));
+					writeToLevel(&az1, logn - 1, getLvl(&atmp, logn) + hn);
+					writeToLevel(&atree, logn - 1, getLvl(&atree1, logn));
+					writeToLevel(&at0, logn - 1, getLvl(&az1, logn));
+					writeToLevel(&at1, logn - 1, getLvl(&az1, logn) + hn);
+					writeToLevel(&atmp, logn - 1, getLvl(&atmp, logn) + n);
+					writeToLevel(&atree0, logn - 1, getLvl(&atree0, logn));
+					writeToLevel(&atree1, logn - 1, getLvl(&atree1, logn));
 				}
 			}
 			--logn;
-
 		}
 
 		/* backtrack from the empty subtree and visit the Node
@@ -521,17 +615,17 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 				fpr x0, x1, y0, y1, w0, w1, w2, w3, sigma;
 				fpr a_re, a_im, b_re, b_im, c_re, c_im;
 
-				atree0[logn] = atree[logn] + 4;
-				atree1[logn] = atree[logn] + 8;
+				writeToLevel(&atree0, logn, getLvl(&atree, logn) + 4);
+				writeToLevel(&atree1, logn, getLvl(&atree, logn) + 8);
 
 				/*
 		 * We split t1 into w*, then do the recursive invocation,
 		 * with output in w*. We finally merge back into z1.
 		 */
-				a_re = at1[logn][0];
-				a_im = at1[logn][2];
-				b_re = at1[logn][1];
-				b_im = at1[logn][3];
+				a_re = getLvl(&at1, logn)[0];
+				a_im = getLvl(&at1, logn)[2];
+				b_re = getLvl(&at1, logn)[1];
+				b_im = getLvl(&at1, logn)[3];
 				c_re = fpr_add(a_re, b_re);
 				c_im = fpr_add(a_im, b_im);
 				w0 = fpr_half(c_re);
@@ -543,18 +637,18 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 
 				x0 = w2;
 				x1 = w3;
-				sigma = atree1[logn][3];
+				sigma = getLvl(&atree1, logn)[3];
 				w2 = fpr_of(falcon_inner_sampler(samp_ctx, x0, sigma));
 				w3 = fpr_of(falcon_inner_sampler(samp_ctx, x1, sigma));
 				a_re = fpr_sub(x0, w2);
 				a_im = fpr_sub(x1, w3);
-				b_re = atree1[logn][0];
-				b_im = atree1[logn][1];
+				b_re = getLvl(&atree1, logn)[0];
+				b_im = getLvl(&atree1, logn)[1];
 				c_re = fpr_sub(fpr_mul(a_re, b_re), fpr_mul(a_im, b_im));
 				c_im = fpr_add(fpr_mul(a_re, b_im), fpr_mul(a_im, b_re));
 				x0 = fpr_add(c_re, w0);
 				x1 = fpr_add(c_im, w1);
-				sigma = atree1[logn][2];
+				sigma = getLvl(&atree1, logn)[2];
 				w0 = fpr_of(falcon_inner_sampler(samp_ctx, x0, sigma));
 				w1 = fpr_of(falcon_inner_sampler(samp_ctx, x1, sigma));
 
@@ -564,36 +658,36 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 				b_im = w3;
 				c_re = fpr_mul(fpr_sub(b_re, b_im), fpr_invsqrt2);
 				c_im = fpr_mul(fpr_add(b_re, b_im), fpr_invsqrt2);
-				az1[logn][0] = w0 = fpr_add(a_re, c_re);
-				az1[logn][2] = w2 = fpr_add(a_im, c_im);
-				az1[logn][1] = w1 = fpr_sub(a_re, c_re);
-				az1[logn][3] = w3 = fpr_sub(a_im, c_im);
+				getLvl(&az1, logn)[0] = w0 = fpr_add(a_re, c_re);
+				getLvl(&az1, logn)[2] = w2 = fpr_add(a_im, c_im);
+				getLvl(&az1, logn)[1] = w1 = fpr_sub(a_re, c_re);
+				getLvl(&az1, logn)[3] = w3 = fpr_sub(a_im, c_im);
 
 				/*
 		 * Compute tb0 = t0 + (t1 - z1) * L. Value tb0 ends up in w*.
 		 */
-				w0 = fpr_sub(at1[logn][0], w0);
-				w1 = fpr_sub(at1[logn][1], w1);
-				w2 = fpr_sub(at1[logn][2], w2);
-				w3 = fpr_sub(at1[logn][3], w3);
+				w0 = fpr_sub(getLvl(&at1, logn)[0], w0);
+				w1 = fpr_sub(getLvl(&at1, logn)[1], w1);
+				w2 = fpr_sub(getLvl(&at1, logn)[2], w2);
+				w3 = fpr_sub(getLvl(&at1, logn)[3], w3);
 
 				a_re = w0;
 				a_im = w2;
-				b_re = atree[logn][0];
-				b_im = atree[logn][2];
+				b_re = getLvl(&atree, logn)[0];
+				b_im = getLvl(&atree, logn)[2];
 				w0 = fpr_sub(fpr_mul(a_re, b_re), fpr_mul(a_im, b_im));
 				w2 = fpr_add(fpr_mul(a_re, b_im), fpr_mul(a_im, b_re));
 				a_re = w1;
 				a_im = w3;
-				b_re = atree[logn][1];
-				b_im = atree[logn][3];
+				b_re = getLvl(&atree, logn)[1];
+				b_im = getLvl(&atree, logn)[3];
 				w1 = fpr_sub(fpr_mul(a_re, b_re), fpr_mul(a_im, b_im));
 				w3 = fpr_add(fpr_mul(a_re, b_im), fpr_mul(a_im, b_re));
 
-				w0 = fpr_add(w0, at0[logn][0]);
-				w1 = fpr_add(w1, at0[logn][1]);
-				w2 = fpr_add(w2, at0[logn][2]);
-				w3 = fpr_add(w3, at0[logn][3]);
+				w0 = fpr_add(w0, getLvl(&at0, logn)[0]);
+				w1 = fpr_add(w1, getLvl(&at0, logn)[1]);
+				w2 = fpr_add(w2, getLvl(&at0, logn)[2]);
+				w3 = fpr_add(w3, getLvl(&at0, logn)[3]);
 
 				/*
 		 * Second recursive invocation.
@@ -613,18 +707,18 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 
 				x0 = w2;
 				x1 = w3;
-				sigma = atree0[logn][3];
+				sigma = getLvl(&atree0, logn)[3];
 				w2 = y0 = fpr_of(falcon_inner_sampler(samp_ctx, x0, sigma));
 				w3 = y1 = fpr_of(falcon_inner_sampler(samp_ctx, x1, sigma));
 				a_re = fpr_sub(x0, y0);
 				a_im = fpr_sub(x1, y1);
-				b_re = atree0[logn][0];
-				b_im = atree0[logn][1];
+				b_re = getLvl(&atree0, logn)[0];
+				b_im = getLvl(&atree0, logn)[1];
 				c_re = fpr_sub(fpr_mul(a_re, b_re), fpr_mul(a_im, b_im));
 				c_im = fpr_add(fpr_mul(a_re, b_im), fpr_mul(a_im, b_re));
 				x0 = fpr_add(c_re, w0);
 				x1 = fpr_add(c_im, w1);
-				sigma = atree0[logn][2];
+				sigma = getLvl(&atree0, logn)[2];
 				w0 = fpr_of(falcon_inner_sampler(samp_ctx, x0, sigma));
 				w1 = fpr_of(falcon_inner_sampler(samp_ctx, x1, sigma));
 
@@ -634,13 +728,13 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 				b_im = w3;
 				c_re = fpr_mul(fpr_sub(b_re, b_im), fpr_invsqrt2);
 				c_im = fpr_mul(fpr_add(b_re, b_im), fpr_invsqrt2);
-				az0[logn][0] = fpr_add(a_re, c_re);
-				az0[logn][2] = fpr_add(a_im, c_im);
-				az0[logn][1] = fpr_sub(a_re, c_re);
-				az0[logn][3] = fpr_sub(a_im, c_im);
+				getLvl(&az0, logn)[0] = fpr_add(a_re, c_re);
+				getLvl(&az0, logn)[2] = fpr_add(a_im, c_im);
+				getLvl(&az0, logn)[1] = fpr_sub(a_re, c_re);
+				getLvl(&az0, logn)[3] = fpr_sub(a_im, c_im);
 			}
 			leftSideIsDone[logn] = true;
-			while(leftSideIsDone[logn] && logn < depth)
+			while (leftSideIsDone[logn] && logn < depth)
 			{
 				leftSideIsDone[logn] = false;
 				++logn;
@@ -648,14 +742,15 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 				hn = n >> 1;
 				if (leftSideIsDone[logn])
 				{// right
-					falcon_inner_poly_merge_fft(az0[logn], atmp[logn], atmp[logn] + hn, logn);
+					falcon_inner_poly_merge_fft(getLvl(&az0, logn), getLvl(&atmp, logn), getLvl(&atmp, logn) + hn, logn);
 				}
 				else
 				{// left
-					falcon_inner_poly_merge_fft(az1[logn], atmp[logn], atmp[logn] + hn, logn);
+					falcon_inner_poly_merge_fft(getLvl(&az1, logn), getLvl(&atmp, logn), getLvl(&atmp, logn) + hn, logn);
 				}
 			}
-			if (logn >= depth){
+			if (logn >= depth)
+			{
 				if (leftSideIsDone[logn])
 				{
 					done = true;
@@ -1016,7 +1111,7 @@ ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0,
  * tmp[] must have room for at least six polynomials.
  */
 static int
- do_sign_tree(void* samp_ctx, int16_t* s2, const fpr* expanded_key, const uint16_t* hm, unsigned logn, fpr* tmp)
+do_sign_tree(void* samp_ctx, int16_t* s2, const fpr* expanded_key, const uint16_t* hm, unsigned logn, fpr* tmp)
 {
 	size_t n, u;
 	fpr *t0, *t1, *tx, *ty;

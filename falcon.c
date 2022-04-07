@@ -666,6 +666,7 @@ falcon_sign_tree_finish(shake256_context *rng,
 				hm, logn);
 		}
 		oldcw = set_fpu_cw(2);
+		unsigned temp = FALCON_EXPANDEDKEY_SIZE(logn);
 		falcon_inner_sign_tree(sv, (inner_shake256_context *)rng,
 			expkey, hm, logn, atmp);
 		set_fpu_cw(oldcw);
