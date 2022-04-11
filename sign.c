@@ -524,8 +524,19 @@ fpr* getLvl(fpr_stack_t* s, unsigned int level)
 		break;
 	}
 }
+#define FALCON_TMPSIZE_SIGNTREE(logn) \
+	((50u << (logn)) + 7)
 void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0, const fpr* t1, unsigned logn, fpr* tmp)
 {
+	size_t trees = skoff_tree(logn);
+	size_t trees2 = ffLDL_treesize(logn);
+	size_t leef = ffLDL_treesize(logn) / MKN(logn+1);
+	size_t sdf = FALCON_TMPSIZE_SIGNTREE(logn);
+	size_t z0off = 0;
+	size_t z1off = 0;
+	size_t t0off = 0;
+	size_t t1off = 0;
+	size_t tmpoff = 0;
 	/* set current to root of binary tree */
 	const unsigned depth = logn;
 	fpr_stack_t az0;
@@ -588,11 +599,17 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 				writeToLevel(&atree1, logn, getLvl(&atree, logn) + n + ffLDL_treesize(logn - 1));
 				falcon_inner_poly_split_fft(getLvl(&az1, logn), getLvl(&az1, logn) + hn, getLvl(&at1, logn), logn);
 				{
+					t0off = z1off;
+					writeToLevel(&at0, logn - 1, getLvl(&az1, logn));
+					t1off = z1off + hn;
+					writeToLevel(&at1, logn - 1, getLvl(&az1, logn) + hn);
+					z0off = tmpoff;
 					writeToLevel(&az0, logn - 1, getLvl(&atmp, logn));
+					z1off = tmpoff + hn;
 					writeToLevel(&az1, logn - 1, getLvl(&atmp, logn) + hn);
 					writeToLevel(&atree, logn - 1, getLvl(&atree1, logn));
-					writeToLevel(&at0, logn - 1, getLvl(&az1, logn));
-					writeToLevel(&at1, logn - 1, getLvl(&az1, logn) + hn);
+
+					tmpoff = tmpoff + n;
 					writeToLevel(&atmp, logn - 1, getLvl(&atmp, logn) + n);
 					writeToLevel(&atree0, logn - 1, getLvl(&atree0, logn));
 					writeToLevel(&atree1, logn - 1, getLvl(&atree1, logn));
@@ -1111,7 +1128,7 @@ ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0,
  * tmp[] must have room for at least six polynomials.
  */
 static int
-do_sign_tree(void* samp_ctx, int16_t* s2, const fpr* expanded_key, const uint16_t* hm, unsigned logn, fpr* tmp)
+do_sign_tree(void* samp_ctx, int16_t* s2, const fpr* expanded_key, size_t expkey_len, const uint16_t* hm, unsigned logn, fpr* tmp)
 {
 	size_t n, u;
 	fpr *t0, *t1, *tx, *ty;
@@ -1158,7 +1175,7 @@ do_sign_tree(void* samp_ctx, int16_t* s2, const fpr* expanded_key, const uint16_
 	/*
 	 * Apply sampling. Output is written back in [tx, ty].
 	 */
-	ffSampling_fft(samp_ctx, tx, ty, tree, t0, t1, logn, ty + n);
+	 ffSampling_fft(samp_ctx, tx, ty, tree, t0, t1, logn, ty + n);
 
 	/*
 	 * Get the lattice point corresponding to that tiny vector.
@@ -1774,7 +1791,7 @@ int falcon_inner_sampler(void* ctx, fpr mu, fpr isigma)
 
 /* see inner.h */
 void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng,
-							const fpr* expanded_key,
+							const fpr* expanded_key, size_t expkey_len,
 							const uint16_t* hm, unsigned logn, uint8_t* tmp)
 {
 	fpr* ftmp;
@@ -1807,7 +1824,7 @@ void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng,
 		 * Do the actual signature.
 		 */
 		if (do_sign_tree(samp_ctx, sig,
-						 expanded_key, hm, logn, ftmp))
+						 expanded_key, expkey_len, hm, logn, ftmp))
 		{
 			break;
 		}

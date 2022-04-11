@@ -226,9 +226,9 @@ bench_sign_tree(void *ctx, unsigned long num)
 	while (num -- > 0) {
 		bc->sig_len = FALCON_SIG_COMPRESSED_MAXSIZE(bc->logn);
 		CC(falcon_sign_tree(&bc->rng,
-			bc->sig, &bc->sig_len, FALCON_SIG_COMPRESSED,
-			bc->esk,
-			"data", 4, bc->tmp, bc->tmp_len));
+							bc->sig, &bc->sig_len, FALCON_SIG_COMPRESSED,
+							bc->esk, 0,
+							"data", 4, bc->tmp, bc->tmp_len));
 	}
 	return 0;
 }
@@ -242,9 +242,9 @@ bench_sign_tree_ct(void *ctx, unsigned long num)
 	while (num -- > 0) {
 		bc->sigct_len = FALCON_SIG_CT_SIZE(bc->logn);
 		CC(falcon_sign_tree(&bc->rng,
-			bc->sigct, &bc->sigct_len, FALCON_SIG_CT,
-			bc->esk,
-			"data", 4, bc->tmp, bc->tmp_len));
+							bc->sigct, &bc->sigct_len, FALCON_SIG_CT,
+							bc->esk, 0,
+							"data", 4, bc->tmp, bc->tmp_len));
 	}
 	return 0;
 }

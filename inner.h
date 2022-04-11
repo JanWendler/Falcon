@@ -894,7 +894,7 @@ prng_get_u8(prng *p)
  *
  * 'logn' MUST lie between 1 and 10 (inclusive).
  */
-void falcon_inner_FFT(fpr *f, unsigned logn);
+void falcon_inner_FFT(fpr f[1024], unsigned logn);
 
 /*
  * Compute the inverse FFT in-place: the source array should contain the
@@ -1110,9 +1110,7 @@ void falcon_inner_expand_privkey(fpr * expanded_key,
  * tmp[] must have 64-bit alignment.
  * This function uses floating-point rounding (see set_fpu_cw()).
  */
-void falcon_inner_sign_tree(int16_t *sig, inner_shake256_context *rng,
-	const fpr * expanded_key,
-	const uint16_t *hm, unsigned logn, uint8_t *tmp);
+void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng, const fpr* expanded_key, size_t expkey_len, const uint16_t* hm, unsigned logn, uint8_t* tmp);
 
 /*
  * Compute a signature over the provided hashed message (hm); the

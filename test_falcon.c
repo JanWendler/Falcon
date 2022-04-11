@@ -3819,7 +3819,7 @@ test_sign_self(const int8_t* f, const int8_t* g,
 		inner_shake256_inject(&sc, msg, sizeof msg);
 		inner_shake256_flip(&sc);
 		falcon_inner_hash_to_point_vartime(&sc, hm, logn);
-		falcon_inner_sign_tree(sig, &rng, expanded_key, hm, logn, tt);
+		falcon_inner_sign_tree(sig, &rng, expanded_key, 0, hm, logn, tt);
 
 		if (!falcon_inner_verify_raw(hm, sig, h, logn, tt))
 		{
@@ -4184,7 +4184,7 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 		sig_len = FALCON_SIG_COMPRESSED_MAXSIZE(logn);
 		memset(sig, 0, sig_len);
 		r = falcon_sign_tree(rng, sig, &sig_len, FALCON_SIG_COMPRESSED,
-							 expkey,
+							 expkey, expkey_len,
 							 "data1", 5, tmpst, tmpst_len);
 		if (r != 0)
 		{
@@ -4214,7 +4214,7 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 		memset(sigpad, 0, sigpad_len);
 		r = falcon_sign_tree(rng, sigpad, &sigpad_len,
 							 FALCON_SIG_PADDED,
-							 expkey,
+							 expkey, 0,
 							 "data1", 5, tmpst, tmpst_len);
 		if (r != 0)
 		{
@@ -4244,7 +4244,7 @@ test_external_API_inner(unsigned logn, shake256_context* rng)
 		sigct_len = FALCON_SIG_CT_SIZE(logn);
 		memset(sigct, 0, sigct_len);
 		r = falcon_sign_tree(rng, sigct, &sigct_len, FALCON_SIG_CT,
-							 expkey,
+							 expkey, 0,
 							 "data1", 5, tmpst, tmpst_len);
 		if (r != 0)
 		{
@@ -5045,7 +5045,7 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 		inner_shake256_init(&sc);
 		inner_shake256_inject(&sc, seed2, 48);
 		inner_shake256_flip(&sc);
-		falcon_inner_sign_tree(sig2, &sc, esk, hm, logn, tmp);
+		falcon_inner_sign_tree(sig2, &sc, esk, 0, hm, logn, tmp);
 		check_eq(sig, sig2, n * sizeof *sig, "Sign dyn/tree mismatch");
 
 		/*

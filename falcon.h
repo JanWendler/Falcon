@@ -617,11 +617,7 @@ int falcon_expand_privkey(void *expanded_key, size_t expanded_key_len,
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_sign_tree(shake256_context *rng,
-	void *sig, size_t *sig_len, int sig_type,
-	const void *expanded_key,
-	const void *data, size_t data_len,
-	void *tmp, size_t tmp_len);
+int falcon_sign_tree(shake256_context* rng, void* sig, size_t* sig_len, int sig_type, const void* expanded_key, size_t expkey_len, const void* data, size_t data_len, void* tmp, size_t tmp_len);
 
 /* ==================================================================== */
 /*
@@ -729,11 +725,7 @@ int falcon_sign_dyn_finish(shake256_context *rng,
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_sign_tree_finish(shake256_context *rng,
-	void *sig, size_t *sig_len, int sig_type,
-	const void *expanded_key,
-	shake256_context *hash_data, const void *nonce,
-	void *tmp, size_t tmp_len);
+int falcon_sign_tree_finish(shake256_context* rng, void* sig, size_t* sig_len, int sig_type, const void* expanded_key, size_t expkey_len, shake256_context* hash_data, const void* nonce, void* tmp, size_t tmp_len);
 
 /* ==================================================================== */
 /*
