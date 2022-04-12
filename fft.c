@@ -173,6 +173,15 @@
  */
 
 /* see inner.h */
+#ifndef FALCON_HLS
+#define FALCON_HLS 0
+#endif
+
+#ifndef FALCON_HLS_FFT
+#define FALCON_HLS_FFT 0
+#endif
+
+#if FALCON_HLS & FALCON_HLS_FFT
 TARGET_AVX2
 void falcon_inner_FFT(fpr f[1024], unsigned logn)
 {
@@ -222,7 +231,6 @@ void falcon_inner_FFT(fpr f[1024], unsigned logn)
 	n = (size_t)1 << logn;
 	hn = n >> 1;
 	t = hn;
-	size_t ht = hn >> 1;
 	const size_t maxSize = 256;
 	fpr x_re[maxSize];
 	fpr x_im[maxSize];
@@ -314,6 +322,146 @@ void falcon_inner_FFT(fpr f[1024], unsigned logn)
 		t = ht;
 	}
 }
+#else
+TARGET_AVX2
+void falcon_inner_FFT(fpr* f, unsigned logn)
+{
+	/*
+	 * FFT algorithm in bit-reversal order uses the following
+	 * iterative algorithm:
+	 *
+	 *   t = N
+	 *   for m = 1; m < N; m *= 2:
+	 *       ht = t/2
+	 *       for i1 = 0; i1 < m; i1 ++:
+	 *           j1 = i1 * t
+	 *           s = GM[m + i1]
+	 *           for j = j1; j < (j1 + ht); j ++:
+	 *               x = f[j]
+	 *               y = s * f[j + ht]
+	 *               f[j] = x + y
+	 *               f[j + ht] = x - y
+	 *       t = ht
+	 *
+	 * GM[k] contains w^rev(k) for primitive root w = exp(i*pi/N).
+	 *
+	 * In the description above, f[] is supposed to contain complex
+	 * numbers. In our in-memory representation, the real and
+	 * imaginary parts of f[k] are in array slots k and k+N/2.
+	 *
+	 * We only keep the first half of the complex numbers. We can
+	 * see that after the first iteration, the first and second halves
+	 * of the array of complex numbers have separate lives, so we
+	 * simply ignore the second part.
+	 */
+
+	unsigned u;
+	size_t t, n, hn, m;
+
+	/*
+	 * First iteration: compute f[j] + i * f[j+N/2] for all j < N/2
+	 * (because GM[1] = w^rev(1) = w^(N/2) = i).
+	 * In our chosen representation, this is a no-op: everything is
+	 * already where it should be.
+	 */
+
+	/*
+	 * Subsequent iterations are truncated to use only the first
+	 * half of values.
+	 */
+	n = (size_t)1 << logn;
+	hn = n >> 1;
+	t = hn;
+	for (u = 1, m = 2; u < logn; u++, m <<= 1)
+	{
+		size_t ht, hm, i1, j1;
+
+		ht = t >> 1;
+		hm = m >> 1;
+		for (i1 = 0, j1 = 0; i1 < hm; i1++, j1 += t)
+		{
+			size_t j, j2;
+
+			j2 = j1 + ht;
+#if FALCON_AVX2// yyyAVX2+1
+			if (ht >= 4)
+			{
+				__m256d s_re, s_im;
+
+				s_re = _mm256_set1_pd(
+					fpr_gm_tab[((m + i1) << 1) + 0].v);
+				s_im = _mm256_set1_pd(
+					fpr_gm_tab[((m + i1) << 1) + 1].v);
+				for (j = j1; j < j2; j += 4)
+				{
+					__m256d x_re, x_im, y_re, y_im;
+					__m256d z_re, z_im;
+
+					x_re = _mm256_loadu_pd(&f[j].v);
+					x_im = _mm256_loadu_pd(&f[j + hn].v);
+					z_re = _mm256_loadu_pd(&f[j + ht].v);
+					z_im = _mm256_loadu_pd(&f[j + ht + hn].v);
+					y_re = FMSUB(z_re, s_re,
+								 _mm256_mul_pd(z_im, s_im));
+					y_im = FMADD(z_re, s_im,
+								 _mm256_mul_pd(z_im, s_re));
+					_mm256_storeu_pd(&f[j].v,
+									 _mm256_add_pd(x_re, y_re));
+					_mm256_storeu_pd(&f[j + hn].v,
+									 _mm256_add_pd(x_im, y_im));
+					_mm256_storeu_pd(&f[j + ht].v,
+									 _mm256_sub_pd(x_re, y_re));
+					_mm256_storeu_pd(&f[j + ht + hn].v,
+									 _mm256_sub_pd(x_im, y_im));
+				}
+			}
+			else
+			{
+				fpr s_re, s_im;
+
+				s_re = fpr_gm_tab[((m + i1) << 1) + 0];
+				s_im = fpr_gm_tab[((m + i1) << 1) + 1];
+				for (j = j1; j < j2; j++)
+				{
+					fpr x_re, x_im, y_re, y_im;
+
+					x_re = f[j];
+					x_im = f[j + hn];
+					y_re = f[j + ht];
+					y_im = f[j + ht + hn];
+					FPC_MUL(y_re, y_im,
+							y_re, y_im, s_re, s_im);
+					FPC_ADD(f[j], f[j + hn],
+							x_re, x_im, y_re, y_im);
+					FPC_SUB(f[j + ht], f[j + ht + hn],
+							x_re, x_im, y_re, y_im);
+				}
+			}
+#else // yyyAVX2+0
+			fpr s_re, s_im;
+
+			s_re = fpr_gm_tab[((m + i1) << 1) + 0];
+			s_im = fpr_gm_tab[((m + i1) << 1) + 1];
+			for (j = j1; j < j2; j++)
+			{
+				fpr x_re, x_im, y_re, y_im;
+
+				x_re = f[j];
+				x_im = f[j + hn];
+				y_re = f[j + ht];
+				y_im = f[j + ht + hn];
+				FPC_MUL(y_re, y_im, y_re, y_im, s_re, s_im);
+				FPC_ADD(f[j], f[j + hn],
+						x_re, x_im, y_re, y_im);
+				FPC_SUB(f[j + ht], f[j + ht + hn],
+						x_re, x_im, y_re, y_im);
+			}
+#endif// yyyAVX2-
+		}
+		t = ht;
+	}
+}
+#endif
 
 /* see inner.h */
 TARGET_AVX2

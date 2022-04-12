@@ -88,6 +88,9 @@ extern "C" {
 #include <stdbool.h>
 
 #define FALCON_HLS 1
+#define FALCON_HLS_ITERATIVE 0
+#define FALCON_HLS_SQRT 0
+#define FALCON_HLS_FFT 1
 
 #if defined FALCON_AVX2 && FALCON_AVX2 // yyyAVX2+1
 /*
@@ -201,8 +204,8 @@ extern "C" {
 #define FALCON_FPEMU      1
 #define FALCON_FPNATIVE   0
 #else
-#define FALCON_FPEMU      1
-#define FALCON_FPNATIVE   0
+#define FALCON_FPEMU      0
+#define FALCON_FPNATIVE   1
 #endif
 
 #elif defined FALCON_FPEMU && !defined FALCON_FPNATIVE

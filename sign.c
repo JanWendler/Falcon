@@ -257,7 +257,6 @@ void falcon_inner_expand_privkey(fpr* expanded_key,
 	b10 = expanded_key + skoff_b10(logn);
 	b11 = expanded_key + skoff_b11(logn);
 	tree = expanded_key + skoff_tree(logn);
-	size_t temp2 = skoff_tree(logn);
 	/*
 	 * We load the private key elements directly into the B0 matrix,
 	 * since B0 = [[g, -f], [G, -F]].
@@ -425,7 +424,10 @@ ffSampling_fft_dyntree(void* samp_ctx, fpr* t0, fpr* t1, fpr* g00, fpr* g01, fpr
  * Perform Fast Fourier Sampling for target vector t and LDL tree T.
  * tmp[] must  logn.
  */
-#if FALCON_HLS
+#ifndef FALCON_HLS_ITERATIVE
+#define FALCON_HLS_ITERATIVE 0
+#endif
+#if FALCON_HLS & FALCON_HLS_ITERATIVE
 typedef struct stack {
 	fpr* stage0;
 	fpr* stage1;
@@ -528,10 +530,6 @@ fpr* getLvl(fpr_stack_t* s, unsigned int level)
 	((50u << (logn)) + 7)
 void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0, const fpr* t1, unsigned logn, fpr* tmp)
 {
-	size_t trees = skoff_tree(logn);
-	size_t trees2 = ffLDL_treesize(logn);
-	size_t leef = ffLDL_treesize(logn) / MKN(logn+1);
-	size_t sdf = FALCON_TMPSIZE_SIGNTREE(logn);
 	size_t z0off = 0;
 	size_t z1off = 0;
 	size_t t0off = 0;
@@ -554,7 +552,6 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 		leftSideIsDone[i] = false;
 	}
 	size_t n, hn;
-	const fpr *tree0, *tree1;
 	n = (size_t)1 << logn;
 	hn = n >> 1;
 	writeToLevel(&az0, logn, z0);
@@ -565,7 +562,6 @@ void ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr
 	writeToLevel(&atmp, logn, tmp);
 	writeToLevel(&atree0, logn, getLvl(&atree, logn) + n);
 	writeToLevel(&atree1, logn, getLvl(&atree, logn) + n + ffLDL_treesize(logn - 1));
-	unsigned temp = ffLDL_treesize(logn - 1);
 	while (!done)
 	{
 		/* Reach the left most tNode of the current tNode */

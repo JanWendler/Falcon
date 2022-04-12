@@ -760,7 +760,12 @@ fpr_sqrt(fpr x)
 #define FALCON_HLS 0
 #endif
 
-#if FALCON_HLS
+#ifndef FALCON_HLS_SQRT
+#define FALCON_HLS_SQRT 0
+#endif
+
+
+#if FALCON_HLS & FALCON_HLS_SQRT
 	/// calculate the sqrt of a number by calculating 1/sqrt(x) * x
 	/// \param x the radical
 	/// \return sqrt of x
