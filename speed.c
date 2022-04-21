@@ -160,7 +160,7 @@ bench_keygen(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		CC(falcon_keygen_make(&bc->rng, bc->logn,
 			bc->sk, FALCON_PRIVKEY_SIZE(bc->logn),
@@ -175,7 +175,7 @@ bench_sign_dyn(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		bc->sig_len = FALCON_SIG_COMPRESSED_MAXSIZE(bc->logn);
 		CC(falcon_sign_dyn(&bc->rng,
@@ -191,7 +191,7 @@ bench_sign_dyn_ct(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		bc->sigct_len = FALCON_SIG_CT_SIZE(bc->logn);
 		CC(falcon_sign_dyn(&bc->rng,
@@ -207,7 +207,7 @@ bench_expand_privkey(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		CC(falcon_expand_privkey(
 			bc->esk, FALCON_EXPANDEDKEY_SIZE(bc->logn),
@@ -222,7 +222,7 @@ bench_sign_tree(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		bc->sig_len = FALCON_SIG_COMPRESSED_MAXSIZE(bc->logn);
 		CC(falcon_sign_tree(&bc->rng,
@@ -238,7 +238,7 @@ bench_sign_tree_ct(void *ctx, unsigned long num)
 {
 	bench_context *bc;
 
-	bc = ctx;
+	bc = (ctx);
 	while (num -- > 0) {
 		bc->sigct_len = FALCON_SIG_CT_SIZE(bc->logn);
 		CC(falcon_sign_tree(&bc->rng,
@@ -255,7 +255,7 @@ bench_verify(void *ctx, unsigned long num)
 	bench_context *bc;
 	size_t pk_len;
 
-	bc = ctx;
+	bc = (ctx);
 	pk_len = FALCON_PUBKEY_SIZE(bc->logn);
 	while (num -- > 0) {
 		CC(falcon_verify(
@@ -272,7 +272,7 @@ bench_verify_ct(void *ctx, unsigned long num)
 	bench_context *bc;
 	size_t pk_len;
 
-	bc = ctx;
+	bc = (ctx);
 	pk_len = FALCON_PUBKEY_SIZE(bc->logn);
 	while (num -- > 0) {
 		CC(falcon_verify(
@@ -302,14 +302,14 @@ test_speed_falcon(unsigned logn, double threshold)
 	len = maxsz(len, FALCON_TMPSIZE_SIGNTREE(logn));
 	len = maxsz(len, FALCON_TMPSIZE_EXPANDPRIV(logn));
 	len = maxsz(len, FALCON_TMPSIZE_VERIFY(logn));
-	bc.tmp = xmalloc(len);
+	bc.tmp = (xmalloc(len));
 	bc.tmp_len = len;
-	bc.pk = xmalloc(FALCON_PUBKEY_SIZE(logn));
-	bc.sk = xmalloc(FALCON_PRIVKEY_SIZE(logn));
-	bc.esk = xmalloc(FALCON_EXPANDEDKEY_SIZE(logn));
-	bc.sig = xmalloc(FALCON_SIG_COMPRESSED_MAXSIZE(logn));
+	bc.pk = (xmalloc(FALCON_PUBKEY_SIZE(logn)));
+	bc.sk = (xmalloc(FALCON_PRIVKEY_SIZE(logn)));
+	bc.esk = (xmalloc(FALCON_EXPANDEDKEY_SIZE(logn)));
+	bc.sig = (xmalloc(FALCON_SIG_COMPRESSED_MAXSIZE(logn)));
 	bc.sig_len = 0;
-	bc.sigct = xmalloc(FALCON_SIG_CT_SIZE(logn));
+	bc.sigct = (xmalloc(FALCON_SIG_CT_SIZE(logn)));
 	bc.sigct_len = 0;
 
 	printf(" %8.2f",

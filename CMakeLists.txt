@@ -12,7 +12,7 @@ set(TestFalconSource test_falcon.c ${FalconSource})
 add_executable(TestFalcon ${TestFalconSource})
 target_compile_options(TestFalcon PRIVATE -pedantic -O0 -Wall )
 
-set(SpeedFalconSource speed.c  ${FalconSource})
+set(SpeedFalconSource speed.c ${FalconSource} )
 add_executable(SpeedFalcon ${SpeedFalconSource})
 target_compile_options(SpeedFalcon PRIVATE -pedantic -O3 -Wall )
 

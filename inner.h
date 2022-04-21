@@ -88,7 +88,7 @@ extern "C" {
 #include <stdbool.h>
 
 #define FALCON_HLS 1
-#define FALCON_HLS_ITERATIVE 0
+#define FALCON_HLS_ITERATIVE 1
 #define FALCON_HLS_SQRT 0
 #define FALCON_HLS_FFT 1
 

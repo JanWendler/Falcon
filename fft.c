@@ -30,7 +30,7 @@
  */
 
 #include "inner.h"
-
+//#include <stdio.h>
 /*
  * Rules for complex number macros:
  * --------------------------------
@@ -237,6 +237,18 @@ void falcon_inner_FFT(fpr f[1024], unsigned logn)
 	fpr y_re[maxSize];
 	fpr y_im[maxSize];
 
+//	static bool firstTime = true;
+//	FILE* fp;
+//	if (firstTime)
+//	{
+//		fp = fopen("input.txt", "w");
+//		for (int i = 0; i < n; ++i)
+//		{
+//			fprintf(fp, "%lf\n", f[i].v);
+//		}
+//		fclose(fp);
+//	}
+
 	for (u = 1, m = 2; u < logn; u++, m <<= 1)
 	{
 		size_t ht, hm, i1, j1;
@@ -302,7 +314,7 @@ void falcon_inner_FFT(fpr f[1024], unsigned logn)
 							x_re, x_im, y_re, y_im);
 				}
 			}
-#else // yyyAVX2+0
+#else// yyyAVX2+0
 			fpr s_re, s_im;
 			s_re = fpr_gm_tab[((m + i1) << 1) + 0];
 			s_im = fpr_gm_tab[((m + i1) << 1) + 1];
@@ -312,15 +324,28 @@ void falcon_inner_FFT(fpr f[1024], unsigned logn)
 			memcpy(y_im, &f[j1 + ht + hn], (j2 - j1) * sizeof(fpr));
 			for (j = j1; j < j2; j++)
 			{
-				FPC_MUL(y_re[j-j1], y_im[j-j1], y_re[j-j1], y_im[j-j1], s_re, s_im);
-				FPC_ADD(f[j], f[j + hn], x_re[j-j1], x_im[j-j1], y_re[j-j1], y_im[j-j1]);
-				FPC_SUB(f[j + ht], f[j + ht + hn], x_re[j-j1], x_im[j-j1], y_re[j-j1],
-						y_im[j-j1]);
+#pragma HLS PIPELINE II = 4
+				FPC_MUL(y_re[j - j1], y_im[j - j1], y_re[j - j1], y_im[j - j1], s_re, s_im);
+				FPC_ADD(f[j], f[j + hn], x_re[j - j1], x_im[j - j1], y_re[j - j1], y_im[j - j1]);
+				FPC_SUB(f[j + ht], f[j + ht + hn], x_re[j - j1], x_im[j - j1], y_re[j - j1],
+						y_im[j - j1]);
 			}
 #endif// yyyAVX2-
 		}
 		t = ht;
 	}
+
+//	if (firstTime)
+//	{
+//		fp = fopen("output.txt", "w");
+//		clearerr(fp);
+//		for (int i = 0; i < n; ++i)
+//		{
+//			fprintf(fp, "%lf\n", f[i].v);
+//		}
+//		fclose(fp);
+//		firstTime = false;
+//	}
 }
 #else
 TARGET_AVX2
@@ -437,7 +462,7 @@ void falcon_inner_FFT(fpr* f, unsigned logn)
 							x_re, x_im, y_re, y_im);
 				}
 			}
-#else // yyyAVX2+0
+#else          // yyyAVX2+0
 			fpr s_re, s_im;
 
 			s_re = fpr_gm_tab[((m + i1) << 1) + 0];
@@ -456,7 +481,7 @@ void falcon_inner_FFT(fpr* f, unsigned logn)
 				FPC_SUB(f[j + ht], f[j + ht + hn],
 						x_re, x_im, y_re, y_im);
 			}
-#endif// yyyAVX2-
+#endif         // yyyAVX2-
 		}
 		t = ht;
 	}
@@ -468,47 +493,47 @@ TARGET_AVX2
 void falcon_inner_iFFT(fpr* f, unsigned logn)
 {
 	/*
-	 * Inverse FFT algorithm in bit-reversal order uses the following
-	 * iterative algorithm:
-	 *
-	 *   t = 1
-	 *   for m = N; m > 1; m /= 2:
-	 *       hm = m/2
-	 *       dt = t*2
-	 *       for i1 = 0; i1 < hm; i1 ++:
-	 *           j1 = i1 * dt
-	 *           s = iGM[hm + i1]
-	 *           for j = j1; j < (j1 + t); j ++:
-	 *               x = f[j]
-	 *               y = f[j + t]
-	 *               f[j] = x + y
-	 *               f[j + t] = s * (x - y)
-	 *       t = dt
-	 *   for i1 = 0; i1 < N; i1 ++:
-	 *       f[i1] = f[i1] / N
-	 *
-	 * iGM[k] contains (1/w)^rev(k) for primitive root w = exp(i*pi/N)
-	 * (actually, iGM[k] = 1/GM[k] = conj(GM[k])).
-	 *
-	 * In the main loop (not counting the final division loop), in
-	 * all iterations except the last, the first and second half of f[]
-	 * (as an array of complex numbers) are separate. In our chosen
-	 * representation, we do not keep the second half.
-	 *
-	 * The last iteration recombines the recomputed half with the
-	 * implicit half, and should yield only real numbers since the
-	 * target polynomial is real; moreover, s = i at that step.
-	 * Thus, when considering x and y:
-	 *    y = conj(x) since the final f[j] must be real
-	 *    Therefore, f[j] is filled with 2*Re(x), and f[j + t] is
-	 *    filled with 2*Im(x).
-	 * But we already have Re(x) and Im(x) in array slots j and j+t
-	 * in our chosen representation. That last iteration is thus a
-	 * simple doubling of the values in all the array.
-	 *
-	 * We make the last iteration a no-op by tweaking the final
-	 * division into a division by N/2, not N.
-	 */
+		 * Inverse FFT algorithm in bit-reversal order uses the following
+		 * iterative algorithm:
+		 *
+		 *   t = 1
+		 *   for m = N; m > 1; m /= 2:
+		 *       hm = m/2
+		 *       dt = t*2
+		 *       for i1 = 0; i1 < hm; i1 ++:
+		 *           j1 = i1 * dt
+		 *           s = iGM[hm + i1]
+		 *           for j = j1; j < (j1 + t); j ++:
+		 *               x = f[j]
+		 *               y = f[j + t]
+		 *               f[j] = x + y
+		 *               f[j + t] = s * (x - y)
+		 *       t = dt
+		 *   for i1 = 0; i1 < N; i1 ++:
+		 *       f[i1] = f[i1] / N
+		 *
+		 * iGM[k] contains (1/w)^rev(k) for primitive root w = exp(i*pi/N)
+		 * (actually, iGM[k] = 1/GM[k] = conj(GM[k])).
+		 *
+		 * In the main loop (not counting the final division loop), in
+		 * all iterations except the last, the first and second half of f[]
+		 * (as an array of complex numbers) are separate. In our chosen
+		 * representation, we do not keep the second half.
+		 *
+		 * The last iteration recombines the recomputed half with the
+		 * implicit half, and should yield only real numbers since the
+		 * target polynomial is real; moreover, s = i at that step.
+		 * Thus, when considering x and y:
+		 *    y = conj(x) since the final f[j] must be real
+		 *    Therefore, f[j] is filled with 2*Re(x), and f[j + t] is
+		 *    filled with 2*Im(x).
+		 * But we already have Re(x) and Im(x) in array slots j and j+t
+		 * in our chosen representation. That last iteration is thus a
+		 * simple doubling of the values in all the array.
+		 *
+		 * We make the last iteration a no-op by tweaking the final
+		 * division into a division by N/2, not N.
+		 */
 	size_t u, n, hn, t, m;
 
 	n = (size_t)1 << logn;
@@ -604,9 +629,9 @@ void falcon_inner_iFFT(fpr* f, unsigned logn)
 	}
 
 	/*
-	 * Last iteration is a no-op, provided that we divide by N/2
-	 * instead of N. We need to make a special case for logn = 0.
-	 */
+		 * Last iteration is a no-op, provided that we divide by N/2
+		 * instead of N. We need to make a special case for logn = 0.
+		 */
 	if (logn > 0)
 	{
 		fpr ni;

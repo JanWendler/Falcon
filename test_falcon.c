@@ -5294,7 +5294,6 @@ test_speed(void)
 int main(void)
 {
 	unsigned old;
-
 	old = set_fpu_cw(2);
 
 	test_SHAKE256();
@@ -5307,7 +5306,7 @@ int main(void)
 	test_sampler();
 	test_sign();
 	test_keygen();
-	test_external_API();
+//	test_external_API();
 	test_nist_KAT(9, "a57400cbaee7109358859a56c735a3cf048a9da2");
 	test_nist_KAT(10, "affdeb3aa83bf9a2039fa9c17d65fd3e3b9828e2");
 	/* test_speed(); */
