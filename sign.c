@@ -336,6 +336,7 @@ typedef int (*samplerZ)(void* ctx, fpr mu, fpr sigma);
 void do_sign_tree_part_1(fpr* t0, fpr* t1, fpr* tx, fpr* ty, const fpr* b01, const fpr* b11, unsigned int logn);
 int do_sign_tree_part_2(const uint16_t* hm, int16_t* s2, fpr* t0, fpr* t1, fpr* tx, fpr* ty, const fpr* b00, const fpr* b01, const fpr* b10, const fpr* b11, unsigned int logn, fpr* tmp);
 void ffSampling_fft_inline(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0, const fpr* t1, unsigned int logn, const fpr* tree0, const fpr* tree1);
+void ffSampling_fft_middle(const fpr* t0, const fpr* t1, fpr* z0, fpr* z1, const fpr* tree, unsigned int logn, fpr* tmp);
 TARGET_AVX2
 static void
 ffSampling_fft_dyntree(void* samp_ctx, fpr* t0, fpr* t1, fpr* g00, fpr* g01, fpr* g11, unsigned orig_logn, unsigned logn, fpr* tmp)
@@ -633,28 +634,32 @@ ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0,
 	falcon_inner_poly_split_fft(z1, z1 + hn, t1, logn);
 	ffSampling_fft(samp_ctx, tmp, tmp + hn,
 				   tree1, z1, z1 + hn, logn - 1, tmp + n);
-
-	{
-		falcon_inner_poly_merge_fft(z1, tmp, tmp + hn, logn);
-
-		/*
-	 * Compute tb0 = t0 + (t1 - z1) * L. Value tb0 ends up in tmp[].
-	 */
-		memcpy(tmp, t1, n * sizeof *t1);
-		falcon_inner_poly_sub(tmp, z1, logn);
-		falcon_inner_poly_mul_fft(tmp, tree, logn);
-		falcon_inner_poly_add(tmp, t0, logn);
-
-		/*
-	 * Second recursive invocation.
-	 */
-		falcon_inner_poly_split_fft(z0, z0 + hn, tmp, logn);
-	}
+	ffSampling_fft_middle(t0,t1,z0,z1,tree,logn,tmp);
 	ffSampling_fft(samp_ctx, tmp, tmp + hn,
 				   tree0, z0, z0 + hn, logn - 1, tmp + n);
 	{
 		falcon_inner_poly_merge_fft(z0, tmp, tmp + hn, logn);
 	}
+}
+void ffSampling_fft_middle(const fpr* t0, const fpr* t1, fpr* z0, fpr* z1, const fpr* tree, unsigned int logn, fpr* tmp)
+{
+	size_t n, hn;
+	n = (size_t)1 << logn;
+	hn = n >> 1;
+	falcon_inner_poly_merge_fft(z1, tmp, tmp + hn, logn);
+
+	/*
+	 * Compute tb0 = t0 + (t1 - z1) * L. Value tb0 ends up in tmp[].
+	 */
+	memcpy(tmp, t1, n * sizeof *t1);
+	falcon_inner_poly_sub(tmp, z1, logn);
+	falcon_inner_poly_mul_fft(tmp, tree, logn);
+	falcon_inner_poly_add(tmp, t0, logn);
+
+	/*
+	 * Second recursive invocation.
+	 */
+	falcon_inner_poly_split_fft(z0, z0 + hn, tmp, logn);
 }
 void ffSampling_fft_inline(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0, const fpr* t1, unsigned int logn, const fpr* tree0, const fpr* tree1)
 {
