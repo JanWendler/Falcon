@@ -355,6 +355,7 @@ void falcon_inner_prng_refill(prng* p)
 		for (v = 0; v < 16; v++)
 		{
 #if FALCON_LE// yyyLE+1
+			#pragma HLS aggregate variable=p
 			((uint32_t*)p->buf.d)[u + (v << 3)] = state[v];
 #else        // yyyLE+0
 			p->buf.d[(u << 2) + (v << 5) + 0] =
