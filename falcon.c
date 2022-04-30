@@ -718,7 +718,7 @@ int falcon_sign_tree_finish(shake256_context* rng,
 		}
 		oldcw = set_fpu_cw(2);
 		falcon_inner_sign_tree(sv, (inner_shake256_context*)rng,
-							   expkey, expkey_len, hm, logn, atmp);
+							   expkey, hm, logn, atmp);
 		set_fpu_cw(oldcw);
 		es = sig;
 		es_len = *sig_len;

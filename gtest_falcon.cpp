@@ -3794,7 +3794,7 @@ test_sign_self(const int8_t* f, const int8_t* g,
 		inner_shake256_inject(&sc, msg, sizeof msg);
 		inner_shake256_flip(&sc);
 		falcon_inner_hash_to_point_vartime(&sc, hm, logn);
-		falcon_inner_sign_tree(sig, &rng, expanded_key, 0, hm, logn, tt);
+		falcon_inner_sign_tree(sig, &rng, expanded_key, hm, logn, tt);
 
 		if (!falcon_inner_verify_raw(hm, sig, h, logn, tt))
 		{
@@ -4972,7 +4972,7 @@ test_nist_KAT(unsigned logn, const char* srefhash)
 		inner_shake256_init(&sc);
 		inner_shake256_inject(&sc, seed2, 48);
 		inner_shake256_flip(&sc);
-		falcon_inner_sign_tree(sig2, &sc, esk, 0, hm, logn, tmp);
+		falcon_inner_sign_tree(sig2, &sc, esk, hm, logn, tmp);
 		check_eq(sig, sig2, n * sizeof *sig, "Sign dyn/tree mismatch");
 
 		/*

@@ -1113,7 +1113,7 @@ void falcon_inner_expand_privkey(fpr * expanded_key,
  * tmp[] must have 64-bit alignment.
  * This function uses floating-point rounding (see set_fpu_cw()).
  */
-void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng, const fpr* expanded_key, size_t expkey_len, const uint16_t* hm, unsigned logn, uint8_t* tmp);
+void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng, const fpr* expanded_key, const uint16_t* hm, unsigned logn, uint8_t* tmp);
 
 /*
  * Compute a signature over the provided hashed message (hm); the
@@ -1162,28 +1162,10 @@ typedef struct {
 } sampler_context;
 
 TARGET_AVX2
-int falcon_inner_sampler(void *ctx, fpr mu, fpr isigma);
+int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma);
 
 TARGET_AVX2
 int falcon_inner_gaussian0_sampler(prng *p);
-
-
-/* Structure of a stack node. Linked List implementation is used for
-   stack. A stack node contains a pointer to tree node and a pointer to
-   next stack node */
-struct ffSampling_fft_param {
-	void* samp_ctx;
-	fpr* z0;
-	fpr* z1;
-	const fpr* tree;
-	const fpr* tree0;
-	const fpr* tree1;
-	const fpr* t0;
-	const fpr* t1;
-	unsigned logn;
-	fpr* tmp;
-	bool isDone;
-};
 
 /* ==================================================================== */
 
