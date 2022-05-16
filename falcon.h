@@ -413,7 +413,7 @@ void shake256_init(shake256_context *sc);
  * This function can be called several times, to inject several chunks
  * of data of arbitrary length.
  */
-void shake256_inject(shake256_context *sc, const void *data, size_t len);
+void shake256_inject(shake256_context *sc, const uint8_t *data, size_t len);
 
 /*
  * Flip the SHAKE256 state to output mode. After this call, shake256_inject()
@@ -432,7 +432,7 @@ void shake256_flip(shake256_context *sc);
  * Arbitrary amounts of data can be extracted, in one or several calls
  * to this function.
  */
-void shake256_extract(shake256_context *sc, void *out, size_t len);
+void shake256_extract(shake256_context *sc, uint8_t *out, size_t len);
 
 /*
  * Initialize a SHAKE256 context as a PRNG from the provided seed.
@@ -440,7 +440,7 @@ void shake256_extract(shake256_context *sc, void *out, size_t len);
  * to output mode to make it ready to produce bytes.
  */
 void shake256_init_prng_from_seed(shake256_context *sc,
-	const void *seed, size_t seed_len);
+	const uint8_t *seed, size_t seed_len);
 
 /*
  * Initialize a SHAKE256 context as a PRNG, using an initial seed from
@@ -617,7 +617,7 @@ int falcon_expand_privkey(void *expanded_key, size_t expanded_key_len,
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_sign_tree(shake256_context* rng, void* sig, size_t* sig_len, int sig_type, const void* expanded_key, size_t expkey_len, const void* data, size_t data_len, void* tmp, size_t tmp_len);
+int falcon_sign_tree(shake256_context* rng, uint8_t* sig, size_t* sig_len, int sig_type, const uint8_t* expanded_key, size_t expkey_len, const uint8_t* data, size_t data_len, uint16_t* tmp, size_t tmp_len);
 
 /* ==================================================================== */
 /*
@@ -645,7 +645,7 @@ int falcon_sign_tree(shake256_context* rng, void* sig, size_t* sig_len, int sig_
  * Returned value: 0 on success, or a negative error code.
  */
 int falcon_sign_start(shake256_context *rng,
-	void *nonce,
+					  uint8_t *nonce,
 	shake256_context *hash_data);
 
 /*
@@ -725,8 +725,11 @@ int falcon_sign_dyn_finish(shake256_context *rng,
  *
  * Returned value: 0 on success, or a negative error code.
  */
-int falcon_sign_tree_finish(shake256_context* rng, void* sig, size_t* sig_len, int sig_type, const void* expanded_key, size_t expkey_len, shake256_context* hash_data, const void* nonce, void* tmp, size_t tmp_len);
-
+int falcon_sign_tree_finish(shake256_context* rng,
+		uint8_t* sig, size_t* sig_len, int sig_type,
+		const uint8_t* expanded_key, size_t expkey_len,
+		shake256_context* hash_data, const uint8_t* nonce,
+		uint16_t* tmp, size_t tmp_len);
 /* ==================================================================== */
 /*
  * Signature verification.

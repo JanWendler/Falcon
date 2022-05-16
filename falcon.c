@@ -39,7 +39,7 @@ void shake256_init(shake256_context* sc)
 }
 
 /* see falcon.h */
-void shake256_inject(shake256_context* sc, const void* data, size_t len)
+void shake256_inject(shake256_context* sc, const uint8_t* data, size_t len)
 {
 	falcon_inner_i_shake256_inject((inner_shake256_context*)sc, data, len);
 }
@@ -51,14 +51,14 @@ void shake256_flip(shake256_context* sc)
 }
 
 /* see falcon.h */
-void shake256_extract(shake256_context* sc, void* out, size_t len)
+void shake256_extract(shake256_context* sc, uint8_t* out, size_t len)
 {
 	falcon_inner_i_shake256_extract((inner_shake256_context*)sc, out, len);
 }
 
 /* see falcon.h */
 void shake256_init_prng_from_seed(shake256_context* sc,
-								  const void* seed, size_t seed_len)
+								  const uint8_t* seed, size_t seed_len)
 {
 	shake256_init(sc);
 	shake256_inject(sc, seed, seed_len);
@@ -329,7 +329,7 @@ int falcon_get_logn(void* obj, size_t len)
 
 /* see falcon.h */
 int falcon_sign_start(shake256_context* rng,
-					  void* nonce,
+					  uint8_t* nonce,
 					  shake256_context* hash_data)
 {
 	shake256_extract(rng, nonce, 40);
@@ -626,10 +626,10 @@ int falcon_expand_privkey(void* expanded_key, size_t expanded_key_len,
 
 /* see falcon.h */
 int falcon_sign_tree_finish(shake256_context* rng,
-							void* sig, size_t* sig_len, int sig_type,
-							const void* expanded_key, size_t expkey_len,
-							shake256_context* hash_data, const void* nonce,
-							void* tmp, size_t tmp_len)
+							uint8_t* sig, size_t* sig_len, int sig_type,
+							const uint8_t* expanded_key, size_t expkey_len,
+							shake256_context* hash_data, const uint8_t* nonce,
+							uint16_t* tmp, size_t tmp_len)
 {
 	unsigned logn;
 	uint8_t* es;
@@ -791,10 +791,10 @@ int falcon_sign_dyn(shake256_context* rng,
 
 /* see falcon.h */
 int falcon_sign_tree(shake256_context* rng,
-					 void* sig, size_t* sig_len, int sig_type,
-					 const void* expanded_key, size_t expkey_len,
-					 const void* data, size_t data_len,
-					 void* tmp, size_t tmp_len)
+					 uint8_t* sig, size_t* sig_len, int sig_type,
+					 const uint8_t* expanded_key, size_t expkey_len,
+					 const uint8_t* data, size_t data_len,
+					 uint16_t* tmp, size_t tmp_len)
 {
 	shake256_context hd;
 	uint8_t nonce[40];

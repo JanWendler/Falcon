@@ -10,7 +10,7 @@ set(FalconSource codec.c common.c config.h falcon.c falcon.h fft.c fpr.c fpr.h i
 
 set(TestFalconSource test_falcon.c ${FalconSource})
 add_executable(TestFalcon ${TestFalconSource})
-target_compile_options(TestFalcon PRIVATE -pedantic -O0 -Wall )
+target_compile_options(TestFalcon PRIVATE -pedantic -O3 -Wall )
 
 set(SpeedFalconSource speed.c ${FalconSource} )
 add_executable(SpeedFalcon ${SpeedFalconSource})

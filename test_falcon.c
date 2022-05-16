@@ -3820,6 +3820,7 @@ test_sign_self(const int8_t* f, const int8_t* g,
 		inner_shake256_inject(&sc, msg, sizeof msg);
 		inner_shake256_flip(&sc);
 		falcon_inner_hash_to_point_vartime(&sc, hm, logn);
+
 		falcon_inner_sign_tree(sig, &rng, expanded_key, hm, logn, tt);
 
 		if (!falcon_inner_verify_raw(hm, sig, h, logn, tt))

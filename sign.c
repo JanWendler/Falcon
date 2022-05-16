@@ -31,6 +31,7 @@
 
 #include "inner.h"
 #include <stdbool.h>
+#include <stdio.h>
 
 /* =================================================================== */
 
@@ -50,7 +51,8 @@
  * Get the size of the LDL tree for an input with polynomials of size
  * 2^logn. The size is expressed in the number of elements.
  */
-static inline unsigned ffLDL_treesize(unsigned logn) {
+static inline unsigned ffLDL_treesize(unsigned logn)
+{
 	/*
 	 * For logn = 0 (polynomials are constant), the "tree" is a
 	 * single element. Otherwise, the tree node has size 2^logn, and
@@ -70,12 +72,14 @@ static inline unsigned ffLDL_treesize(unsigned logn) {
  *
  * tmp[] must have room for at least one polynomial.
  */
-static void ffLDL_fft_inner(fpr *tree, fpr *g0, fpr *g1, unsigned logn,
-		fpr *tmp) {
+static void ffLDL_fft_inner(fpr* tree, fpr* g0, fpr* g1, unsigned logn,
+							fpr* tmp)
+{
 	size_t n, hn;
 
 	n = MKN(logn);
-	if (n == 1) {
+	if (n == 1)
+	{
 		tree[0] = g0[0];
 		return;
 	}
@@ -103,7 +107,7 @@ static void ffLDL_fft_inner(fpr *tree, fpr *g0, fpr *g1, unsigned logn,
 	 */
 	ffLDL_fft_inner(tree + n, g1, g1 + hn, logn - 1, tmp);
 	ffLDL_fft_inner(tree + n + ffLDL_treesize(logn - 1), g0, g0 + hn, logn - 1,
-			tmp);
+					tmp);
 }
 
 /*
@@ -117,13 +121,15 @@ static void ffLDL_fft_inner(fpr *tree, fpr *g0, fpr *g1, unsigned logn,
  * arrays g00, g01 and g11. tmp[] should have room for at least three
  * polynomials of 2^logn elements each.
  */
-static void ffLDL_fft(fpr *tree, const fpr *g00, const fpr *g01, const fpr *g11,
-		unsigned logn, fpr *tmp) {
+static void ffLDL_fft(fpr* tree, const fpr* g00, const fpr* g01, const fpr* g11,
+					  unsigned logn, fpr* tmp)
+{
 	size_t n, hn;
 	fpr *d00, *d11;
 
 	n = MKN(logn);
-	if (n == 1) {
+	if (n == 1)
+	{
 		tree[0] = g00[0];
 		return;
 	}
@@ -140,31 +146,35 @@ static void ffLDL_fft(fpr *tree, const fpr *g00, const fpr *g01, const fpr *g11,
 	memcpy(d11, tmp, n * sizeof *tmp);
 	ffLDL_fft_inner(tree + n, d11, d11 + hn, logn - 1, tmp);
 	ffLDL_fft_inner(tree + n + ffLDL_treesize(logn - 1), d00, d00 + hn,
-			logn - 1, tmp);
+					logn - 1, tmp);
 }
 
 /*
  * Normalize an ffLDL tree: each leaf of value x is replaced with
  * sigma / sqrt(x).
  */
-static void ffLDL_binary_normalize(fpr *tree, unsigned orig_logn, unsigned logn) {
+static void ffLDL_binary_normalize(fpr* tree, unsigned orig_logn, unsigned logn)
+{
 	/*
 	 * TODO: make an iterative version.
 	 */
 	size_t n;
 
 	n = MKN(logn);
-	if (n == 1) {
+	if (n == 1)
+	{
 		/*
 		 * We actually store in the tree leaf the inverse of
 		 * the value mandated by the specification: this
 		 * saves a division both here and in the sampler.
 		 */
 		tree[0] = fpr_mul(fpr_sqrt(tree[0]), fpr_inv_sigma[orig_logn]);
-	} else {
+	}
+	else
+	{
 		ffLDL_binary_normalize(tree + n, orig_logn, logn - 1);
 		ffLDL_binary_normalize(tree + n + ffLDL_treesize(logn - 1), orig_logn,
-				logn - 1);
+							   logn - 1);
 	}
 }
 
@@ -174,11 +184,13 @@ static void ffLDL_binary_normalize(fpr *tree, unsigned orig_logn, unsigned logn)
  * Convert an integer polynomial (with small values) into the
  * representation with complex numbers.
  */
-static void smallints_to_fpr(fpr *r, const int8_t *t, unsigned logn) {
+static void smallints_to_fpr(fpr* r, const int8_t* t, unsigned logn)
+{
 	size_t n, u;
 
 	n = MKN(logn);
-	for (u = 0; u < n; u++) {
+	for (u = 0; u < n; u++)
+	{
 		r[u] = fpr_of(t[u]);
 	}
 }
@@ -189,36 +201,42 @@ static void smallints_to_fpr(fpr *r, const int8_t *t, unsigned logn) {
  *  - The ffLDL tree
  */
 
-static inline size_t skoff_b00(unsigned logn) {
-	(void) logn;
+static inline size_t skoff_b00(unsigned logn)
+{
+	(void)logn;
 	return 0;
 }
 
-static inline size_t skoff_b01(unsigned logn) {
+static inline size_t skoff_b01(unsigned logn)
+{
 	return MKN(logn);
 }
 
-static inline size_t skoff_b10(unsigned logn) {
+static inline size_t skoff_b10(unsigned logn)
+{
 	return 2 * MKN(logn);
 }
 
-static inline size_t skoff_b11(unsigned logn) {
+static inline size_t skoff_b11(unsigned logn)
+{
 	return 3 * MKN(logn);
 }
 
-static inline size_t skoff_tree(unsigned logn) {
+static inline size_t skoff_tree(unsigned logn)
+{
 	return 4 * MKN(logn);
 }
 
 /* see inner.h */
-void falcon_inner_expand_privkey(fpr *expanded_key, const int8_t *f,
-		const int8_t *g, const int8_t *F, const int8_t *G, unsigned logn,
-		uint8_t *tmp) {
+void falcon_inner_expand_privkey(fpr* expanded_key, const int8_t* f,
+								 const int8_t* g, const int8_t* F, const int8_t* G, unsigned logn,
+								 uint8_t* tmp)
+{
 	size_t n;
 	fpr *rf, *rg, *rF, *rG;
 	fpr *b00, *b01, *b10, *b11;
 	fpr *g00, *g01, *g11, *gxx;
-	fpr *tree;
+	fpr* tree;
 
 	n = MKN(logn);
 	b00 = expanded_key + skoff_b00(logn);
@@ -260,7 +278,7 @@ void falcon_inner_expand_privkey(fpr *expanded_key, const int8_t *f,
 	 * For historical reasons, this implementation uses
 	 * g00, g01 and g11 (upper triangle).
 	 */
-	g00 = (fpr*) tmp;
+	g00 = (fpr*)tmp;
 	g01 = g00 + n;
 	g11 = g01 + n;
 	gxx = g11 + n;
@@ -294,7 +312,7 @@ void falcon_inner_expand_privkey(fpr *expanded_key, const int8_t *f,
 	ffLDL_binary_normalize(tree, logn, logn);
 }
 
-typedef int (*samplerZ)(void *ctx, fpr mu, fpr sigma);
+typedef int (*samplerZ)(void* ctx, fpr mu, fpr sigma);
 
 /*
  * Perform Fast Fourier Sampling for target vector t. The Gram matrix
@@ -303,8 +321,9 @@ typedef int (*samplerZ)(void *ctx, fpr mu, fpr sigma);
  * tmp[] buffer must have room for four polynomials.
  */
 TARGET_AVX2
-static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
-		fpr *g01, fpr *g11, unsigned orig_logn, unsigned logn, fpr *tmp) {
+static void ffSampling_fft_dyntree(void* samp_ctx, fpr* t0, fpr* t1, fpr* g00,
+								   fpr* g01, fpr* g11, unsigned orig_logn, unsigned logn, fpr* tmp)
+{
 	size_t n, hn;
 	fpr *z0, *z1;
 
@@ -313,7 +332,8 @@ static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
 	 * array has length only 1 at this point); we normalize it
 	 * with regards to sigma, then use it for sampling.
 	 */
-	if (logn == 0) {
+	if (logn == 0)
+	{
 		fpr leaf;
 
 		leaf = g00[0];
@@ -323,7 +343,7 @@ static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
 		return;
 	}
 
-	n = (size_t) 1 << logn;
+	n = (size_t)1 << logn;
 	hn = n >> 1;
 
 	/*
@@ -360,7 +380,7 @@ static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
 	z1 = tmp + n;
 	falcon_inner_poly_split_fft(z1, z1 + hn, t1, logn);
 	ffSampling_fft_dyntree(samp_ctx, z1, z1 + hn, g11, g11 + hn, g01 + hn,
-			orig_logn, logn - 1, z1 + n);
+						   orig_logn, logn - 1, z1 + n);
 	falcon_inner_poly_merge_fft(tmp + (n << 1), z1, z1 + hn, logn);
 
 	/*
@@ -383,7 +403,7 @@ static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
 	z0 = tmp;
 	falcon_inner_poly_split_fft(z0, z0 + hn, t0, logn);
 	ffSampling_fft_dyntree(samp_ctx, z0, z0 + hn, g00, g00 + hn, g01, orig_logn,
-			logn - 1, z0 + n);
+						   logn - 1, z0 + n);
 	falcon_inner_poly_merge_fft(t0, z0, z0 + hn, logn);
 }
 
@@ -398,26 +418,31 @@ static void ffSampling_fft_dyntree(void *samp_ctx, fpr *t0, fpr *t1, fpr *g00,
 
 #define FALCON_TMPSIZE_SIGNTREE(logn) \
 	((50u << (logn)) + 7)
-unsigned tree_offset(unsigned depth, unsigned logn, const unsigned *lvlOffset) {
+unsigned tree_offset(unsigned depth, unsigned logn, const unsigned* lvlOffset)
+{
 	unsigned offset = 0;
 	size_t n;
-	for (unsigned i = logn + 1; i <= depth; ++i) {
+	for (unsigned i = logn + 1; i <= depth; ++i)
+	{
 		n = 1 << (logn + 1);
 		offset += n;
-		if (lvlOffset[logn] % 2) {
+		if (lvlOffset[logn] % 2)
+		{
 			offset += ffLDL_treesize(logn);
 		}
 		++logn;
 	}
 	return offset;
 }
-unsigned t_offset(const unsigned *lvlOffset, unsigned logn, unsigned depth,
-		const unsigned tNr) {
+unsigned t_offset(const unsigned* lvlOffset, unsigned logn, unsigned depth,
+				  const unsigned tNr)
+{
 	size_t n, hn, offset;
 	n = 1 << (logn + 1);
 	hn = n >> 1;
 	offset = 1 << (depth + 1);
-	switch (tNr) {
+	switch (tNr)
+	{
 	case 0:
 		return lvlOffset[logn] * n + (logn - 1) * offset;
 		break;
@@ -429,14 +454,17 @@ unsigned t_offset(const unsigned *lvlOffset, unsigned logn, unsigned depth,
 	}
 	return 0;
 }
-unsigned z_offset(const unsigned *lvlOffset, unsigned logn, unsigned depth) {
+unsigned z_offset(const unsigned* lvlOffset, unsigned logn, unsigned depth)
+{
 	size_t n, offset;
 	offset = 1 << (depth + 1);
 	n = 1 << (logn);
-	return lvlOffset[logn] * n + (logn - 1) * offset;;
+	return lvlOffset[logn] * n + (logn - 1) * offset;
+	;
 }
-void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *tree,
-		const fpr *t, unsigned logn, fpr *tmp) {
+void ffSampling_fft_it(sampler_context* samp_ctx, fpr* z0, fpr* z1,
+					   const fpr* tree, const fpr* t, unsigned logn, fpr* tmp)
+{
 	const unsigned depth = logn;
 	bool leftSideIsDone[10];
 	unsigned lvlOffset[10];
@@ -448,43 +476,52 @@ void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *t
 	fpr z1tmp[9 * 1024];
 	fpr z0tmp[9 * 1024];
 	bool recursionIsDone = 0;
-	for (int i = 0; i <= depth; ++i) {
+	int i = 0;
+	for (i = 0; i <= depth; ++i)
+	{
 		leftSideIsDone[i] = false;
 	}
-	for (int i = 0; i <= depth; ++i) {
+	for (i = 0; i <= depth; ++i)
+	{
 		lvlOffset[depth - i] = (1 << i) - 1;
 		zOffset[depth - i] = (1 << (i + 1)) - 1;
 	}
 
 	falcon_inner_poly_split_fft(ttmp + t_offset(lvlOffset, logn, depth, 0),
-			ttmp + t_offset(lvlOffset, logn, depth, 1), t, logn + 1);
-	while (!recursionIsDone) {
-		n = (size_t) 1 << logn;
+								ttmp + t_offset(lvlOffset, logn, depth, 1), t, logn + 1);
+	while (!recursionIsDone)
+	{
+		n = (size_t)1 << logn;
 		hn = n >> 1;
 		// the last two levels are inlined
-		if (logn > 2) {
-			if (leftSideIsDone[logn]) { // right
+		if (logn > 2)
+		{
+			if (leftSideIsDone[logn])
+			{// right
 				memcpy(tmp, ttmp + t_offset(lvlOffset, logn, depth, 1),
-						n * sizeof(*t));
+					   n * sizeof(*t));
 				falcon_inner_poly_sub(tmp,
-						z1tmp + z_offset(zOffset, logn, depth), logn);
+									  z1tmp + z_offset(zOffset, logn, depth), logn);
 				falcon_inner_poly_mul_fft(tmp,
-						tree + tree_offset(depth, logn, lvlOffset), logn);
+										  tree + tree_offset(depth, logn, lvlOffset), logn);
 				falcon_inner_poly_add(tmp,
-						ttmp + t_offset(lvlOffset, logn, depth, 0), logn);
-				for (int i = 0; i < logn; ++i) {
+									  ttmp + t_offset(lvlOffset, logn, depth, 0), logn);
+				for (int i = 0; i < logn; ++i)
+				{
 					lvlOffset[i] -= 1;
 					zOffset[i] -= 1;
 				}
 				falcon_inner_poly_split_fft(
-						ttmp + t_offset(lvlOffset, logn - 1, depth, 0),
-						ttmp + t_offset(lvlOffset, logn - 1, depth, 1), tmp,
-						logn);
-			} else { // left
+					ttmp + t_offset(lvlOffset, logn - 1, depth, 0),
+					ttmp + t_offset(lvlOffset, logn - 1, depth, 1), tmp,
+					logn);
+			}
+			else
+			{// left
 				falcon_inner_poly_split_fft(
-						ttmp + t_offset(lvlOffset, logn - 1, depth, 0),
-						ttmp + t_offset(lvlOffset, logn - 1, depth, 1),
-						ttmp + t_offset(lvlOffset, logn, depth, 1), logn);
+					ttmp + t_offset(lvlOffset, logn - 1, depth, 0),
+					ttmp + t_offset(lvlOffset, logn - 1, depth, 1),
+					ttmp + t_offset(lvlOffset, logn, depth, 1), logn);
 			}
 			--logn;
 		}
@@ -492,19 +529,21 @@ void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *t
 		/* backtrack from the empty subtree and visit the Node
 		 at the top of the leftSideIsDone; however, if the leftSideIsDone is empty,
 		 you are recursionIsDone */
-		else {
+		else
+		{
 			/*
 			 * inline code
 			 *
 			 * */
 
-			if (logn == 2) {
+			if (logn == 2)
+			{
 				fpr x0, x1, y0, y1, w0, w1, w2, w3, sigma;
 				fpr a_re, a_im, b_re, b_im, c_re, c_im;
-				const fpr *tree0 = tree + tree_offset(depth, logn, lvlOffset)
-						+ 4;
-				const fpr *tree1 = tree + tree_offset(depth, logn, lvlOffset)
-						+ 8;
+				const fpr* tree0 = tree + tree_offset(depth, logn, lvlOffset)
+					+ 4;
+				const fpr* tree1 = tree + tree_offset(depth, logn, lvlOffset)
+					+ 8;
 				/*
 				 * We split t1 into w*, then do the recursive invocation,
 				 * with output in w*. We finally merge back into z1.
@@ -546,13 +585,13 @@ void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *t
 				c_re = fpr_mul(fpr_sub(b_re, b_im), fpr_invsqrt2);
 				c_im = fpr_mul(fpr_add(b_re, b_im), fpr_invsqrt2);
 				z1tmp[z_offset(zOffset, logn, depth) + 0] = w0 = fpr_add(a_re,
-						c_re);
+																		 c_re);
 				z1tmp[z_offset(zOffset, logn, depth) + 2] = w2 = fpr_add(a_im,
-						c_im);
+																		 c_im);
 				z1tmp[z_offset(zOffset, logn, depth) + 1] = w1 = fpr_sub(a_re,
-						c_re);
+																		 c_re);
 				z1tmp[z_offset(zOffset, logn, depth) + 3] = w3 = fpr_sub(a_im,
-						c_im);
+																		 c_im);
 
 				/*
 				 * Compute tb0 = t0 + (t1 - z1) * L. Value tb0 ends up in w*.
@@ -625,35 +664,41 @@ void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *t
 				z0tmp[z_offset(zOffset, logn, depth) + 3] = fpr_sub(a_im, c_im);
 			}
 			leftSideIsDone[logn] = true;
-			while (leftSideIsDone[logn] && logn < depth) {
+			while (leftSideIsDone[logn] && logn < depth)
+			{
 				leftSideIsDone[logn] = false;
 				++logn;
-				n = (size_t) 1 << logn;
+				n = (size_t)1 << logn;
 				hn = n >> 1;
-				if (leftSideIsDone[logn]) { // right
+				if (leftSideIsDone[logn])
+				{// right
 					memcpy(tmp, z0tmp + z_offset(zOffset, logn - 1, depth),
-							hn * sizeof(*z0));
+						   hn * sizeof(*z0));
 					memcpy(tmp + hn, z1tmp + z_offset(zOffset, logn - 1, depth),
-							hn * sizeof(*z1));
+						   hn * sizeof(*z1));
 					falcon_inner_poly_merge_fft(
-							z0tmp + z_offset(zOffset, logn, depth), tmp,
-							tmp + hn, logn);
-				} else { // left
+						z0tmp + z_offset(zOffset, logn, depth), tmp,
+						tmp + hn, logn);
+				}
+				else
+				{// left
 					memcpy(tmp, z0tmp + z_offset(zOffset, logn - 1, depth),
-							hn * sizeof(*z0));
+						   hn * sizeof(*z0));
 					memcpy(tmp + hn, z1tmp + z_offset(zOffset, logn - 1, depth),
-							hn * sizeof(*z1));
+						   hn * sizeof(*z1));
 					falcon_inner_poly_merge_fft(
-							z1tmp + z_offset(zOffset, logn, depth), tmp,
-							tmp + hn, logn);
+						z1tmp + z_offset(zOffset, logn, depth), tmp,
+						tmp + hn, logn);
 				}
 			}
-			if (logn >= depth) {
-				if (leftSideIsDone[logn]) {
+			if (logn >= depth)
+			{
+				if (leftSideIsDone[logn])
+				{
 					memcpy(z0, z0tmp + z_offset(zOffset, logn, depth),
-							n * sizeof(*z0));
+						   n * sizeof(*z0));
 					memcpy(z1, z1tmp + z_offset(zOffset, logn, depth),
-							n * sizeof(*z1));
+						   n * sizeof(*z1));
 					recursionIsDone = true;
 				}
 			}
@@ -662,11 +707,12 @@ void ffSampling_fft_it(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *t
 	}
 }
 
-static void ffSampling_fft(sampler_context *samp_ctx, fpr *z0, fpr *z1, const fpr *tree,
-		const fpr *t0, const fpr *t1, unsigned logn, fpr *tmp) {
+static void ffSampling_fft(sampler_context* samp_ctx, fpr* z0, fpr* z1,
+						   const fpr* tree, const fpr* t0, const fpr* t1, unsigned logn, fpr* tmp)
+{
 	size_t n, hn;
 	const fpr *tree0, *tree1;
-	n = (size_t) 1 << logn;
+	n = (size_t)1 << logn;
 	hn = n >> 1;
 	tree0 = tree + n;
 	tree1 = tree + n + ffLDL_treesize(logn - 1);
@@ -1045,8 +1091,25 @@ ffSampling_fft(void* samp_ctx, fpr* z0, fpr* z1, const fpr* tree, const fpr* t0,
  *
  * tmp[] must have room for at least six polynomials.
  */
-int do_sign_tree(sampler_context *samp_ctx, int16_t *s2, const fpr *expanded_key,
-		const uint16_t *hm, unsigned logn, fpr *tmp) {
+#if __MIRCROBLAZE__
+int do_sign_tree(sampler_context* samp_ctx, int16_t* s2,
+				 const fpr* expanded_key, const uint16_t* hm, unsigned logn, fpr* tmp)
+{
+	
+}
+
+#else
+int do_sign_tree(sampler_context* samp_ctx, int16_t* s2,
+				 const fpr* expanded_key, const uint16_t* hm, unsigned logn, fpr* tmp)
+{
+#pragma HLS INTERFACE mode=m_axi port=samp_ctx
+#pragma HLS INTERFACE mode=m_axi port=s2
+#pragma HLS INTERFACE mode=m_axi port=expanded_key
+#pragma HLS INTERFACE mode=m_axi port=hm
+#pragma HLS INTERFACE mode=s_axilite port=logn
+#pragma HLS INTERFACE mode=m_axi port=tmp
+#pragma HLS INTERFACE mode=s_axilite port=return
+
 	size_t n, u;
 	fpr *t0, *t1, *tx, *ty;
 	const fpr *b00, *b01, *b10, *b11, *tree;
@@ -1066,7 +1129,8 @@ int do_sign_tree(sampler_context *samp_ctx, int16_t *s2, const fpr *expanded_key
 	/*
 	 * Set the target vector to [hm, 0] (hm is the hashed message).
 	 */
-	for (u = 0; u < n; u++) {
+	for (u = 0; u < n; u++)
+	{
 		t0[u] = fpr_of(hm[u]);
 		/* This is implicit.
 		 t1[u] = fpr_zero;
@@ -1114,16 +1178,17 @@ int do_sign_tree(sampler_context *samp_ctx, int16_t *s2, const fpr *expanded_key
 	/*
 	 * Compute the signature.
 	 */
-	s1tmp = (int16_t*) tx;
+	s1tmp = (int16_t*)tx;
 	sqn = 0;
 	ng = 0;
-	for (u = 0; u < n; u++) {
+	for (u = 0; u < n; u++)
+	{
 		int32_t z;
 
-		z = (int32_t) hm[u] - (int32_t) fpr_rint(t0[u]);
-		sqn += (uint32_t) (z * z);
+		z = (int32_t)hm[u] - (int32_t)fpr_rint(t0[u]);
+		sqn += (uint32_t)(z * z);
 		ng |= sqn;
-		s1tmp[u] = (int16_t) z;
+		s1tmp[u] = (int16_t)z;
 	}
 	sqn |= -(ng >> 31);
 
@@ -1136,18 +1201,20 @@ int do_sign_tree(sampler_context *samp_ctx, int16_t *s2, const fpr *expanded_key
 	 * s2[] may overlap with the hashed message hm[] and we need
 	 * hm[] for the next iteration.
 	 */
-	s2tmp = (int16_t*) tmp;
-	for (u = 0; u < n; u++) {
-		s2tmp[u] = (int16_t) -fpr_rint(t1[u]);
+	s2tmp = (int16_t*)tmp;
+	for (u = 0; u < n; u++)
+	{
+		s2tmp[u] = (int16_t)-fpr_rint(t1[u]);
 	}
-	if (falcon_inner_is_short_half(sqn, s2tmp, logn)) {
+	if (falcon_inner_is_short_half(sqn, s2tmp, logn))
+	{
 		memcpy(s2, s2tmp, n * sizeof *s2);
 		memcpy(tmp, s1tmp, n * sizeof *s1tmp);
 		return 1;
 	}
 	return 0;
 }
-
+#endif
 /*
  * Compute a signature: the signature contains two vectors, s1 and s2.
  * The s1 vector is not returned. The squared norm of (s1,s2) is
@@ -1157,9 +1224,10 @@ int do_sign_tree(sampler_context *samp_ctx, int16_t *s2, const fpr *expanded_key
  *
  * tmp[] must have room for at least nine polynomials.
  */
-static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
-		const int8_t *g, const int8_t *F, const int8_t *G, const uint16_t *hm,
-		unsigned logn, fpr *tmp) {
+static int do_sign_dyn(void* samp_ctx, int16_t* s2, const int8_t* f,
+					   const int8_t* g, const int8_t* F, const int8_t* G, const uint16_t* hm,
+					   unsigned logn, fpr* tmp)
+{
 	size_t n, u;
 	fpr *t0, *t1, *tx, *ty;
 	fpr *b00, *b01, *b10, *b11, *g00, *g01, *g11;
@@ -1205,19 +1273,19 @@ static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
 	t1 = t0 + n;
 
 	memcpy(t0, b01, n * sizeof *b01);
-	falcon_inner_poly_mulselfadj_fft(t0, logn); // t0 <- b01*adj(b01)
+	falcon_inner_poly_mulselfadj_fft(t0, logn);// t0 <- b01*adj(b01)
 
 	memcpy(t1, b00, n * sizeof *b00);
-	falcon_inner_poly_muladj_fft(t1, b10, logn); // t1 <- b00*adj(b10)
-	falcon_inner_poly_mulselfadj_fft(b00, logn); // b00 <- b00*adj(b00)
+	falcon_inner_poly_muladj_fft(t1, b10, logn);// t1 <- b00*adj(b10)
+	falcon_inner_poly_mulselfadj_fft(b00, logn);// b00 <- b00*adj(b00)
 	falcon_inner_poly_add(b00, t0, logn);       // b00 <- g00
 	memcpy(t0, b01, n * sizeof *b01);
-	falcon_inner_poly_muladj_fft(b01, b11, logn);       // b01 <- b01*adj(b11)
+	falcon_inner_poly_muladj_fft(b01, b11, logn);// b01 <- b01*adj(b11)
 	falcon_inner_poly_add(b01, t1, logn);        // b01 <- g01
 
-	falcon_inner_poly_mulselfadj_fft(b10, logn);        // b10 <- b10*adj(b10)
+	falcon_inner_poly_mulselfadj_fft(b10, logn);// b10 <- b10*adj(b10)
 	memcpy(t1, b11, n * sizeof *b11);
-	falcon_inner_poly_mulselfadj_fft(t1, logn);        // t1 <- b11*adj(b11)
+	falcon_inner_poly_mulselfadj_fft(t1, logn);// t1 <- b11*adj(b11)
 	falcon_inner_poly_add(b10, t1, logn);      // b10 <- g11
 
 	/*
@@ -1240,7 +1308,8 @@ static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
 	/*
 	 * Set the target vector to [hm, 0] (hm is the hashed message).
 	 */
-	for (u = 0; u < n; u++) {
+	for (u = 0; u < n; u++)
+	{
 		t0[u] = fpr_of(hm[u]);
 		/* This is implicit.
 		 t1[u] = fpr_zero;
@@ -1317,16 +1386,17 @@ static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
 	falcon_inner_iFFT(t0, logn);
 	falcon_inner_iFFT(t1, logn);
 
-	s1tmp = (int16_t*) tx;
+	s1tmp = (int16_t*)tx;
 	sqn = 0;
 	ng = 0;
-	for (u = 0; u < n; u++) {
+	for (u = 0; u < n; u++)
+	{
 		int32_t z;
 
-		z = (int32_t) hm[u] - (int32_t) fpr_rint(t0[u]);
-		sqn += (uint32_t) (z * z);
+		z = (int32_t)hm[u] - (int32_t)fpr_rint(t0[u]);
+		sqn += (uint32_t)(z * z);
 		ng |= sqn;
-		s1tmp[u] = (int16_t) z;
+		s1tmp[u] = (int16_t)z;
 	}
 	sqn |= -(ng >> 31);
 
@@ -1339,11 +1409,13 @@ static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
 	 * s2[] may overlap with the hashed message hm[] and we need
 	 * hm[] for the next iteration.
 	 */
-	s2tmp = (int16_t*) tmp;
-	for (u = 0; u < n; u++) {
-		s2tmp[u] = (int16_t) -fpr_rint(t1[u]);
+	s2tmp = (int16_t*)tmp;
+	for (u = 0; u < n; u++)
+	{
+		s2tmp[u] = (int16_t)-fpr_rint(t1[u]);
 	}
-	if (falcon_inner_is_short_half(sqn, s2tmp, logn)) {
+	if (falcon_inner_is_short_half(sqn, s2tmp, logn))
+	{
 		memcpy(s2, s2tmp, n * sizeof *s2);
 		memcpy(tmp, s1tmp, n * sizeof *s1tmp);
 		return 1;
@@ -1356,7 +1428,8 @@ static int do_sign_dyn(void *samp_ctx, int16_t *s2, const int8_t *f,
  * on zero and standard deviation 1.8205, with a precision of 72 bits.
  */
 TARGET_AVX2
-int falcon_inner_gaussian0_sampler(prng *p) {
+int falcon_inner_gaussian0_sampler(prng* p)
+{
 #if FALCON_AVX2// yyyAVX2+1
 
 	/*
@@ -1486,14 +1559,14 @@ int falcon_inner_gaussian0_sampler(prng *p) {
 
 #else// yyyAVX2+0
 
-	static const uint32_t dist[] = { 10745844u, 3068844u, 3741698u, 5559083u,
-			1580863u, 8248194u, 2260429u, 13669192u, 2736639u, 708981u,
-			4421575u, 10046180u, 169348u, 7122675u, 4136815u, 30538u, 13063405u,
-			7650655u, 4132u, 14505003u, 7826148u, 417u, 16768101u, 11363290u,
-			31u, 8444042u, 8086568u, 1u, 12844466u, 265321u, 0u, 1232676u,
-			13644283u, 0u, 38047u, 9111839u, 0u, 870u, 6138264u, 0u, 14u,
-			12545723u, 0u, 0u, 3104126u, 0u, 0u, 28824u, 0u, 0u, 198u, 0u, 0u,
-			1u };
+	static const uint32_t dist[] = {10745844u, 3068844u, 3741698u, 5559083u,
+									1580863u, 8248194u, 2260429u, 13669192u, 2736639u, 708981u,
+									4421575u, 10046180u, 169348u, 7122675u, 4136815u, 30538u, 13063405u,
+									7650655u, 4132u, 14505003u, 7826148u, 417u, 16768101u, 11363290u,
+									31u, 8444042u, 8086568u, 1u, 12844466u, 265321u, 0u, 1232676u,
+									13644283u, 0u, 38047u, 9111839u, 0u, 870u, 6138264u, 0u, 14u,
+									12545723u, 0u, 0u, 3104126u, 0u, 0u, 28824u, 0u, 0u, 198u, 0u, 0u,
+									1u};
 
 	uint32_t v0, v1, v2, hi;
 	uint64_t lo;
@@ -1505,16 +1578,17 @@ int falcon_inner_gaussian0_sampler(prng *p) {
 	 */
 	lo = prng_get_u64(p);
 	hi = prng_get_u8(p);
-	v0 = (uint32_t) lo & 0xFFFFFF;
-	v1 = (uint32_t) (lo >> 24) & 0xFFFFFF;
-	v2 = (uint32_t) (lo >> 48) | (hi << 16);
+	v0 = (uint32_t)lo & 0xFFFFFF;
+	v1 = (uint32_t)(lo >> 24) & 0xFFFFFF;
+	v2 = (uint32_t)(lo >> 48) | (hi << 16);
 
 	/*
 	 * Sampled value is z, such that v0..v2 is lower than the first
 	 * z elements of the table.
 	 */
 	z = 0;
-	for (u = 0; u < (sizeof dist) / sizeof(dist[0]); u += 3) {
+	for (u = 0; u < (sizeof dist) / sizeof(dist[0]); u += 3)
+	{
 		uint32_t w0, w1, w2, cc;
 
 		w0 = dist[u + 2];
@@ -1523,7 +1597,7 @@ int falcon_inner_gaussian0_sampler(prng *p) {
 		cc = (v0 - w0) >> 31;
 		cc = (v1 - w1 - cc) >> 31;
 		cc = (v2 - w2 - cc) >> 31;
-		z += (int) cc;
+		z += (int)cc;
 	}
 	return z;
 
@@ -1534,7 +1608,8 @@ int falcon_inner_gaussian0_sampler(prng *p) {
  * Sample a bit with probability exp(-x) for some x >= 0.
  */
 TARGET_AVX2
-static int BerExp(prng *p, fpr x, fpr ccs) {
+static int BerExp(prng* p, fpr x, fpr ccs)
+{
 	int s, i;
 	fpr r;
 	uint32_t sw, w;
@@ -1544,7 +1619,7 @@ static int BerExp(prng *p, fpr x, fpr ccs) {
 	 * Reduce x modulo log(2): x = s*log(2) + r, with s an integer,
 	 * and 0 <= r < log(2). Since x >= 0, we can use fpr_trunc().
 	 */
-	s = (int) fpr_trunc(fpr_mul(x, fpr_inv_log2));
+	s = (int)fpr_trunc(fpr_mul(x, fpr_inv_log2));
 	r = fpr_sub(x, fpr_mul(fpr_of(s), fpr_log2));
 
 	/*
@@ -1556,9 +1631,9 @@ static int BerExp(prng *p, fpr x, fpr ccs) {
 	 * then BerExp will be non-zero with probability less than
 	 * 2^(-64), so we can simply saturate s at 63.
 	 */
-	sw = (uint32_t) s;
+	sw = (uint32_t)s;
 	sw ^= (sw ^ 63) & -((63 - sw) >> 31);
-	s = (int) sw;
+	s = (int)sw;
 
 	/*
 	 * Compute exp(-r); we know that 0 <= r < log(2) at this point, so
@@ -1582,9 +1657,9 @@ static int BerExp(prng *p, fpr x, fpr ccs) {
 	i = 64;
 	do {
 		i -= 8;
-		w = prng_get_u8(p) - ((uint32_t) (z >> i) & 0xFF);
+		w = prng_get_u8(p) - ((uint32_t)(z >> i) & 0xFF);
 	} while (!w && i > 0);
-	return (int) (w >> 31);
+	return (int)(w >> 31);
 }
 
 /*
@@ -1596,8 +1671,9 @@ static int BerExp(prng *p, fpr x, fpr ccs) {
  * 0.5 and 1); in Falcon, sigma should always be between 1.2 and 1.9.
  */
 TARGET_AVX2
-int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
-	sampler_context *spc;
+int falcon_inner_sampler(sampler_context* ctx, fpr mu, fpr isigma)
+{
+	sampler_context* spc;
 	int s;
 	fpr r, dss, ccs;
 
@@ -1607,7 +1683,7 @@ int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
 	 * Center is mu. We compute mu = s + r where s is an integer
 	 * and 0 <= r < 1.
 	 */
-	s = (int) fpr_floor(mu);
+	s = (int)fpr_floor(mu);
 	r = fpr_sub(mu, fpr_of(s));
 
 	/*
@@ -1623,7 +1699,8 @@ int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
 	/*
 	 * We now need to sample on center r.
 	 */
-	for (;;) {
+	for (;;)
+	{
 		int z0, z, b;
 		fpr x;
 
@@ -1639,7 +1716,7 @@ int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
 		 *    centered on 0.
 		 */
 		z0 = falcon_inner_gaussian0_sampler(&spc->p);
-		b = (int) prng_get_u8(&spc->p) & 1;
+		b = (int)prng_get_u8(&spc->p) & 1;
 		z = b + ((b << 1) - 1) * z0;
 
 		/*
@@ -1669,9 +1746,10 @@ int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
 		 */
 		x = fpr_mul(fpr_sqr(fpr_sub(fpr_of(z), r)), dss);
 		x = fpr_sub(x,
-				fpr_mul(fpr_of((int64_t) z0 * (int64_t) z0),
-						fpr_inv_2sqrsigma0));
-		if (BerExp(&spc->p, x, ccs)) {
+					fpr_mul(fpr_of((int64_t)z0 * (int64_t)z0),
+							fpr_inv_2sqrsigma0));
+		if (BerExp(&spc->p, x, ccs))
+		{
 			/*
 			 * Rejection sampling was centered on r, but the
 			 * actual center is mu = s + r.
@@ -1682,13 +1760,15 @@ int falcon_inner_sampler(sampler_context *ctx, fpr mu, fpr isigma) {
 }
 
 /* see inner.h */
-void falcon_inner_sign_tree(int16_t *sig, inner_shake256_context *rng,
-		const fpr *expanded_key, const uint16_t *hm, unsigned logn,
-		uint8_t *tmp) {
-	fpr *ftmp;
+void falcon_inner_sign_tree(int16_t* sig, inner_shake256_context* rng,
+							const fpr* expanded_key, const uint16_t* hm, unsigned logn,
+							uint8_t* tmp)
+{
+	fpr* ftmp;
 
-	ftmp = (fpr*) tmp;
-	for (;;) {
+	ftmp = (fpr*)tmp;
+	for (;;)
+	{
 		/*
 		 * Signature produces short vectors s1 and s2. The
 		 * signature is acceptable only if the aggregate vector
@@ -1700,7 +1780,7 @@ void falcon_inner_sign_tree(int16_t *sig, inner_shake256_context *rng,
 		 * and the public key).
 		 */
 		sampler_context spc;
-		sampler_context *samp_ctx;
+		sampler_context* samp_ctx;
 
 		/*
 		 * Normal sampling. We use a fast PRNG seeded from our
@@ -1713,20 +1793,25 @@ void falcon_inner_sign_tree(int16_t *sig, inner_shake256_context *rng,
 		/*
 		 * Do the actual signature.
 		 */
-		if (do_sign_tree(samp_ctx, sig, expanded_key, hm, logn, ftmp)) {
+		FILE *fp;
+
+		if (do_sign_tree(samp_ctx, sig, expanded_key, hm, logn, ftmp))
+		{
 			break;
 		}
 	}
 }
 
 /* see inner.h */
-void falcon_inner_sign_dyn(int16_t *sig, inner_shake256_context *rng,
-		const int8_t *f, const int8_t *g, const int8_t *F, const int8_t *G,
-		const uint16_t *hm, unsigned logn, uint8_t *tmp) {
-	fpr *ftmp;
+void falcon_inner_sign_dyn(int16_t* sig, inner_shake256_context* rng,
+						   const int8_t* f, const int8_t* g, const int8_t* F, const int8_t* G,
+						   const uint16_t* hm, unsigned logn, uint8_t* tmp)
+{
+	fpr* ftmp;
 
-	ftmp = (fpr*) tmp;
-	for (;;) {
+	ftmp = (fpr*)tmp;
+	for (;;)
+	{
 		/*
 		 * Signature produces short vectors s1 and s2. The
 		 * signature is acceptable only if the aggregate vector
@@ -1738,7 +1823,7 @@ void falcon_inner_sign_dyn(int16_t *sig, inner_shake256_context *rng,
 		 * and the public key).
 		 */
 		sampler_context spc;
-		void *samp_ctx;
+		void* samp_ctx;
 
 		/*
 		 * Normal sampling. We use a fast PRNG seeded from our
@@ -1751,7 +1836,8 @@ void falcon_inner_sign_dyn(int16_t *sig, inner_shake256_context *rng,
 		/*
 		 * Do the actual signature.
 		 */
-		if (do_sign_dyn(samp_ctx, sig, f, g, F, G, hm, logn, ftmp)) {
+		if (do_sign_dyn(samp_ctx, sig, f, g, F, G, hm, logn, ftmp))
+		{
 			break;
 		}
 	}

@@ -129,8 +129,7 @@ int falcon_inner_get_seed(void* seed, size_t len)
 #endif//FALCON_HLS
 
 /* see inner.h */
-void falcon_inner_prng_init(prng* p, inner_shake256_context* src)
-{
+void falcon_inner_prng_init(prng *p, inner_shake256_context *src) {
 #if FALCON_LE// yyyLE+1
 	inner_shake256_extract(src, p->state.d, 56);
 #else // yyyLE+0
@@ -176,97 +175,94 @@ void falcon_inner_prng_init(prng* p, inner_shake256_context* src)
  * The block counter is XORed into the first 8 bytes of the IV.
  */
 TARGET_AVX2
-void falcon_inner_prng_refill(prng* p)
+void
+falcon_inner_prng_refill(prng *p)
 {
-#if FALCON_AVX2// yyyAVX2+1
+#if FALCON_AVX2 // yyyAVX2+1
 
 	static const uint32_t CW[] = {
-		0x61707865, 0x3320646e, 0x79622d32, 0x6b206574};
+		0x61707865, 0x3320646e, 0x79622d32, 0x6b206574
+	};
 
 	uint64_t cc;
 	size_t u;
 	int i;
-	uint32_t* sw;
-	union
-	{
+	uint32_t *sw;
+	union {
 		uint32_t w[16];
-		__m256i y[2]; /* for alignment */
+		__m256i y[2];  /* for alignment */
 	} t;
 	__m256i state[16], init[16];
 
-	sw = (uint32_t*)p->state.d;
+	sw = (uint32_t *)p->state.d;
 
 	/*
 	 * XOR next counter values into state.
 	 */
-	cc = *(uint64_t*)(p->state.d + 48);
-	for (u = 0; u < 8; u++)
-	{
+	cc = *(uint64_t *)(p->state.d + 48);
+	for (u = 0; u < 8; u ++) {
 		t.w[u] = (uint32_t)(cc + u);
 		t.w[u + 8] = (uint32_t)((cc + u) >> 32);
 	}
-	*(uint64_t*)(p->state.d + 48) = cc + 8;
+	*(uint64_t *)(p->state.d + 48) = cc + 8;
 
 	/*
 	 * Load state.
 	 */
-	for (u = 0; u < 4; u++)
-	{
+	for (u = 0; u < 4; u ++) {
 		state[u] = init[u] =
 			_mm256_broadcastd_epi32(_mm_cvtsi32_si128(CW[u]));
 	}
-	for (u = 0; u < 10; u++)
-	{
+	for (u = 0; u < 10; u ++) {
 		state[u + 4] = init[u + 4] =
 			_mm256_broadcastd_epi32(_mm_cvtsi32_si128(sw[u]));
 	}
 	state[14] = init[14] = _mm256_xor_si256(
 		_mm256_broadcastd_epi32(_mm_cvtsi32_si128(sw[10])),
-		_mm256_loadu_si256((__m256i*)&t.w[0]));
+		_mm256_loadu_si256((__m256i *)&t.w[0]));
 	state[15] = init[15] = _mm256_xor_si256(
 		_mm256_broadcastd_epi32(_mm_cvtsi32_si128(sw[11])),
-		_mm256_loadu_si256((__m256i*)&t.w[8]));
+		_mm256_loadu_si256((__m256i *)&t.w[8]));
 
 	/*
 	 * Do all rounds.
 	 */
-	for (i = 0; i < 10; i++)
-	{
+	for (i = 0; i < 10; i ++) {
 
-#define QROUND(a, b, c, d)                               \
-	do {                                                 \
+#define QROUND(a, b, c, d)   do { \
 		state[a] = _mm256_add_epi32(state[a], state[b]); \
 		state[d] = _mm256_xor_si256(state[d], state[a]); \
-		state[d] = _mm256_or_si256(                      \
-			_mm256_slli_epi32(state[d], 16),             \
-			_mm256_srli_epi32(state[d], 16));            \
+		state[d] = _mm256_or_si256( \
+			_mm256_slli_epi32(state[d], 16), \
+			_mm256_srli_epi32(state[d], 16)); \
 		state[c] = _mm256_add_epi32(state[c], state[d]); \
 		state[b] = _mm256_xor_si256(state[b], state[c]); \
-		state[b] = _mm256_or_si256(                      \
-			_mm256_slli_epi32(state[b], 12),             \
-			_mm256_srli_epi32(state[b], 20));            \
+		state[b] = _mm256_or_si256( \
+			_mm256_slli_epi32(state[b], 12), \
+			_mm256_srli_epi32(state[b], 20)); \
 		state[a] = _mm256_add_epi32(state[a], state[b]); \
 		state[d] = _mm256_xor_si256(state[d], state[a]); \
-		state[d] = _mm256_or_si256(                      \
-			_mm256_slli_epi32(state[d], 8),              \
-			_mm256_srli_epi32(state[d], 24));            \
+		state[d] = _mm256_or_si256( \
+			_mm256_slli_epi32(state[d],  8), \
+			_mm256_srli_epi32(state[d], 24)); \
 		state[c] = _mm256_add_epi32(state[c], state[d]); \
 		state[b] = _mm256_xor_si256(state[b], state[c]); \
-		state[b] = _mm256_or_si256(                      \
-			_mm256_slli_epi32(state[b], 7),              \
-			_mm256_srli_epi32(state[b], 25));            \
+		state[b] = _mm256_or_si256( \
+			_mm256_slli_epi32(state[b], 7), \
+			_mm256_srli_epi32(state[b], 25)); \
 	} while (0)
 
-		QROUND(0, 4, 8, 12);
-		QROUND(1, 5, 9, 13);
-		QROUND(2, 6, 10, 14);
-		QROUND(3, 7, 11, 15);
-		QROUND(0, 5, 10, 15);
-		QROUND(1, 6, 11, 12);
-		QROUND(2, 7, 8, 13);
-		QROUND(3, 4, 9, 14);
+		QROUND( 0,  4,  8, 12);
+		QROUND( 1,  5,  9, 13);
+		QROUND( 2,  6, 10, 14);
+		QROUND( 3,  7, 11, 15);
+		QROUND( 0,  5, 10, 15);
+		QROUND( 1,  6, 11, 12);
+		QROUND( 2,  7,  8, 13);
+		QROUND( 3,  4,  9, 14);
 
 #undef QROUND
+
 	}
 
 	/*
@@ -274,53 +270,53 @@ void falcon_inner_prng_refill(prng* p)
 	 * buffer. We can dump the AVX2 values "as is" because the non-AVX2
 	 * code uses a compatible order of values.
 	 */
-	for (u = 0; u < 16; u++)
-	{
-		_mm256_storeu_si256((__m256i*)&p->buf.d[u << 5],
+	for (u = 0; u < 16; u ++) {
+		_mm256_storeu_si256((__m256i *)&p->buf.d[u << 5],
 							_mm256_add_epi32(state[u], init[u]));
 	}
 
-#else// yyyAVX2+0
+#else // yyyAVX2+0
 
-	static const uint32_t CW[] = {
-		0x61707865, 0x3320646e, 0x79622d32, 0x6b206574};
+	static const uint32_t CW[] = { 0x61707865, 0x3320646e, 0x79622d32,
+								  0x6b206574 };
 
 	uint64_t cc;
 	size_t u;
-
+	uint8_t pbuf[512];
+	uint8_t pstate[256];
+	memcpy(pbuf, p->buf.d, 512);
+	memcpy(pstate, p->state.d, 256);
 	/*
 	 * State uses local endianness. Only the output bytes must be
 	 * converted to little endian (if used on a big-endian machine).
 	 */
-	cc = *(uint64_t*)(p->state.d + 48);
-	for (u = 0; u < 8; u++)
-	{
+	cc = *(uint64_t*) (pstate + 48);
+	for (u = 0; u < 8; u++) {
 		uint32_t state[16];
 		size_t v;
 		int i;
 
 		memcpy(&state[0], CW, sizeof CW);
-		memcpy(&state[4], p->state.d, 48);
-		state[14] ^= (uint32_t)cc;
-		state[15] ^= (uint32_t)(cc >> 32);
-		for (i = 0; i < 10; i++)
-		{
+		memcpy(&state[4], pstate, 48);
+		state[14] ^= (uint32_t) cc;
+		state[15] ^= (uint32_t) (cc >> 32);
+		for (i = 0; i < 10; i++) {
 
 #define QROUND(a, b, c, d)                              \
-	do {                                                \
-		state[a] += state[b];                           \
-		state[d] ^= state[a];                           \
-		state[d] = (state[d] << 16) | (state[d] >> 16); \
-		state[c] += state[d];                           \
-		state[b] ^= state[c];                           \
-		state[b] = (state[b] << 12) | (state[b] >> 20); \
-		state[a] += state[b];                           \
-		state[d] ^= state[a];                           \
-		state[d] = (state[d] << 8) | (state[d] >> 24);  \
-		state[c] += state[d];                           \
-		state[b] ^= state[c];                           \
-		state[b] = (state[b] << 7) | (state[b] >> 25);  \
-	} while (0)
+		do {                                                \
+			state[a] += state[b];                           \
+			state[d] ^= state[a];                           \
+			state[d] = (state[d] << 16) | (state[d] >> 16); \
+			state[c] += state[d];                           \
+			state[b] ^= state[c];                           \
+			state[b] = (state[b] << 12) | (state[b] >> 20); \
+			state[a] += state[b];                           \
+			state[d] ^= state[a];                           \
+			state[d] = (state[d] << 8) | (state[d] >> 24);  \
+			state[c] += state[d];                           \
+			state[b] ^= state[c];                           \
+			state[b] = (state[b] << 7) | (state[b] >> 25);  \
+		} while (0)
 
 			QROUND(0, 4, 8, 12);
 			QROUND(1, 5, 9, 13);
@@ -334,69 +330,48 @@ void falcon_inner_prng_refill(prng* p)
 #undef QROUND
 		}
 
-		for (v = 0; v < 4; v++)
-		{
+		for (v = 0; v < 4; v++) {
 			state[v] += CW[v];
 		}
-		for (v = 4; v < 14; v++)
-		{
-			state[v] += ((uint32_t*)p->state.d)[v - 4];
+		for (v = 4; v < 14; v++) {
+			state[v] += ((uint32_t*) pstate)[v - 4];
 		}
-		state[14] += ((uint32_t*)p->state.d)[10]
-			^ (uint32_t)cc;
-		state[15] += ((uint32_t*)p->state.d)[11]
-			^ (uint32_t)(cc >> 32);
+		state[14] += ((uint32_t*) pstate)[10] ^ (uint32_t) cc;
+		state[15] += ((uint32_t*) pstate)[11] ^ (uint32_t) (cc >> 32);
 		cc++;
 
 		/*
 		 * We mimic the interleaving that is used in the AVX2
 		 * implementation.
 		 */
-		for (v = 0; v < 16; v++)
-		{
-#if FALCON_LE// yyyLE+1
-			#pragma HLS aggregate variable=p
-			((uint32_t*)p->buf.d)[u + (v << 3)] = state[v];
-#else        // yyyLE+0
-			p->buf.d[(u << 2) + (v << 5) + 0] =
-				(uint8_t)state[v];
-			p->buf.d[(u << 2) + (v << 5) + 1] =
-				(uint8_t)(state[v] >> 8);
-			p->buf.d[(u << 2) + (v << 5) + 2] =
-				(uint8_t)(state[v] >> 16);
-			p->buf.d[(u << 2) + (v << 5) + 3] =
-				(uint8_t)(state[v] >> 24);
-#endif       // yyyLE-
+		for (v = 0; v < 16; v++) {
+			((uint32_t*) pbuf)[u + (v << 3)] = state[v];
 		}
 	}
-	*(uint64_t*)(p->state.d + 48) = cc;
-
-#endif// yyyAVX2-
-
+	*(uint64_t*) (pstate + 48) = cc;
 	p->ptr = 0;
+	memcpy(p->state.d, pstate, 256);
+	memcpy(p->buf.d, pbuf, 512);
+#endif
 }
 
 /* see inner.h */
-void falcon_inner_prng_get_bytes(prng* p, void* dst, size_t len)
-{
-	uint8_t* buf;
+void falcon_inner_prng_get_bytes(prng *p, void *dst, size_t len) {
+	uint8_t *buf;
 
 	buf = dst;
-	while (len > 0)
-	{
+	while (len > 0) {
 		size_t clen;
 
 		clen = (sizeof p->buf.d) - p->ptr;
-		if (clen > len)
-		{
+		if (clen > len) {
 			clen = len;
 		}
 		memcpy(buf, p->buf.d, clen);
 		buf += clen;
 		len -= clen;
 		p->ptr += clen;
-		if (p->ptr == sizeof p->buf.d)
-		{
+		if (p->ptr == sizeof p->buf.d) {
 			falcon_inner_prng_refill(p);
 		}
 	}

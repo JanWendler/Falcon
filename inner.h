@@ -796,14 +796,12 @@ int falcon_inner_get_seed(void *seed, size_t seed_len);
  * 64-bit direct access.
  */
 typedef struct {
-	union {
+	struct {
 		uint8_t d[512]; /* MUST be 512, exactly */
-		uint64_t dummy_u64;
 	} buf;
 	size_t ptr;
-	union {
+	struct {
 		uint8_t d[256];
-		uint64_t dummy_u64;
 	} state;
 	int type;
 } prng;
@@ -845,13 +843,14 @@ prng_get_u64(prng *p)
 		u = 0;
 	}
 	p->ptr = u + 8;
-
 	/*
 	 * On systems that use little-endian encoding and allow
 	 * unaligned accesses, we can simply read the data where it is.
 	 */
 #if FALCON_LE && FALCON_UNALIGNED  // yyyLEU+1
-	return *(uint64_t *)(p->buf.d + u);
+	uint8_t pbuf[512];
+	memcpy(pbuf, p->buf.d, 512);
+	return *(uint64_t *)(pbuf + u);
 #else  // yyyLEU+0
 	return (uint64_t)p->buf.d[u + 0]
 		| ((uint64_t)p->buf.d[u + 1] << 8)
@@ -871,7 +870,6 @@ static inline unsigned
 prng_get_u8(prng *p)
 {
 	unsigned v;
-
 	v = p->buf.d[p->ptr ++];
 	if (p->ptr == sizeof p->buf.d) {
 		falcon_inner_prng_refill(p);
